@@ -12,13 +12,16 @@ export interface MatchCardProps {
   onDiscard?: (() => void) | undefined;
 }
 
+const MARKETPLACE_SOURCE = "marketplace";
+
 export function MatchCard({ match, onToggleSaved, onDiscard }: MatchCardProps) {
   const { listing, score, breakdown } = match;
+  const surface = listing.source === MARKETPLACE_SOURCE ? "bg-surface-marketplace" : "bg-surface";
   const facts = describeFacts(listing);
   const place = listing.neighborhood ?? listing.title;
 
   return (
-    <article aria-label={listing.title} className="grid overflow-hidden rounded-lg bg-surface">
+    <article aria-label={listing.title} className={`grid overflow-hidden rounded-lg ${surface}`}>
       <div className="relative">
         <ListingPhoto listing={listing} />
         <GlassSurface

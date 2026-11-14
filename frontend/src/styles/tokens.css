@@ -3,6 +3,7 @@
   --bg: #f2f2f7;
   --surface: #ffffff;
   --surface-2: #f2f2f7;
+  --surface-marketplace: #f6f9ff;
   --label: #000000;
   --label-2: #5e5e66;
   --label-3: #8a8a90;
@@ -53,6 +54,7 @@
     --bg: #000000;
     --surface: #1c1c1e;
     --surface-2: #2c2c2e;
+    --surface-marketplace: #1c212b;
     --label: #ffffff;
     --label-2: #aeaeb5;
     --label-3: #7c7c83;
@@ -87,6 +89,7 @@
   --bg: #000000;
   --surface: #1c1c1e;
   --surface-2: #2c2c2e;
+  --surface-marketplace: #1c212b;
   --label: #ffffff;
   --label-2: #aeaeb5;
   --label-3: #7c7c83;

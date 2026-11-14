@@ -37,6 +37,7 @@ Los componentes **nunca** usan colores sueltos (hex): siempre un token.
 | `--bg` | `#F2F2F7` | `#000000` | Fondo de la app (agrupado) | — |
 | `--surface` | `#FFFFFF` | `#1C1C1E` | Tarjetas, listas, sheets | — |
 | `--surface-2` | `#F2F2F7` | `#2C2C2E` | Elementos dentro de una superficie | — |
+| `--surface-marketplace` | `#F6F9FF` | `#1C212B` | Tarjeta de un anuncio de Facebook Marketplace, que suele traer menos datos; el portal se lee además en el enlace "Ver en…" | — |
 | `--label` | `#000000` | `#FFFFFF` | Texto principal | 21:1 |
 | `--label-2` | `#5E5E66` | `#AEAEB5` | Texto secundario | 6.4:1 / 7.7:1 |
 | `--label-3` | `#8A8A90` | `#7C7C83` | Placeholders, bordes de inputs (≥ 3:1 para UI); **no** para texto que haya que leer | 3.1–3.4:1 / 4.1:1 |

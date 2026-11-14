@@ -20,6 +20,14 @@ export const MissingFacts: Story = {
     ),
   },
 };
+export const FromMarketplace: Story = {
+  args: {
+    match: aMatch(
+      { source: "marketplace", title: "Arriendo suite", area_m2: null, bathrooms: null },
+      71,
+    ),
+  },
+};
 export const Saved: Story = { args: { match: { ...aMatch(), is_saved: true } } };
 export const NoLongerFits: Story = {
   args: { match: { ...aMatch(), is_saved: true, passed_hard_filters: false } },
