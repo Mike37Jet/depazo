@@ -15,6 +15,19 @@ describe("describeFilters", () => {
     expect(labels.slice(1)).toEqual(["2+ hab", "La Carolina +2"]);
   });
 
+  it.each([
+    [2, 3, "2 a 3 hab"],
+    [2, 2, "2 hab"],
+    [null, 3, "Hasta 3 hab"],
+    [2, null, "2+ hab"],
+  ])("describes bedrooms from %s to %s as %s", (minimum, maximum, label) => {
+    const profile = { ...SAVED_PROFILE, min_bedrooms: minimum, max_bedrooms: maximum };
+
+    const labels = describeFilters(profile).map((chip) => chip.label);
+
+    expect(labels).toContain(label);
+  });
+
   it("marks only the budget as the primary filter", () => {
     const chips = describeFilters(SAVED_PROFILE);
 

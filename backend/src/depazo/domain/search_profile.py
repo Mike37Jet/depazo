@@ -27,6 +27,7 @@ class SearchProfile:
     min_monthly_cost_usd: Decimal | None = None
     is_condo_fee_in_budget: bool = True
     min_bedrooms: int | None = None
+    max_bedrooms: int | None = None
     min_bathrooms: int | None = None
     min_area_m2: Decimal | None = None
     preferred_neighborhoods: frozenset[str] = field(default_factory=frozenset)
@@ -44,9 +45,16 @@ class SearchProfile:
         if self.min_area_m2 is not None and self.min_area_m2 <= 0:
             raise InvalidSearchProfileError("min area must be positive")
         if any(
-            count is not None and count < 0 for count in (self.min_bedrooms, self.min_bathrooms)
+            count is not None and count < 0
+            for count in (self.min_bedrooms, self.max_bedrooms, self.min_bathrooms)
         ):
-            raise InvalidSearchProfileError("room minimums cannot be negative")
+            raise InvalidSearchProfileError("room counts cannot be negative")
+        if (
+            self.min_bedrooms is not None
+            and self.max_bedrooms is not None
+            and self.max_bedrooms < self.min_bedrooms
+        ):
+            raise InvalidSearchProfileError("max bedrooms cannot be below min bedrooms")
         if not 0 <= self.min_score <= MAX_SCORE_THRESHOLD:
             raise InvalidSearchProfileError("min score must be between 0 and 100")
         overlapping = _normalized(self.preferred_neighborhoods) & _normalized(

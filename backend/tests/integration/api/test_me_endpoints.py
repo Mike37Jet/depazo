@@ -48,11 +48,14 @@ async def test_reports_a_missing_profile(client: httpx.AsyncClient) -> None:
 async def test_saves_and_reads_back_the_search_profile(client: httpx.AsyncClient) -> None:
     headers = authorized(uuid4())
 
-    saved = await client.put("/me/search-profile", json=PROFILE, headers=headers)
+    saved = await client.put(
+        "/me/search-profile", json={**PROFILE, "max_bedrooms": 3}, headers=headers
+    )
     read = await client.get("/me/search-profile", headers=headers)
 
     assert saved.status_code == 200
     assert read.json() == saved.json()
+    assert read.json()["max_bedrooms"] == 3
     assert read.json()["max_monthly_cost_usd"] == 900
     assert read.json()["preferred_neighborhoods"] == ["La Carolina"]
 

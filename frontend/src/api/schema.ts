@@ -182,6 +182,7 @@ export interface components {
     "SearchProfileBody-Input": {
       excluded_neighborhoods: string[];
       is_condo_fee_in_budget: boolean;
+      max_bedrooms?: number | null;
       max_monthly_cost_usd: number | string;
       min_area_m2?: number | string | null;
       min_bathrooms?: number | null;
@@ -194,6 +195,7 @@ export interface components {
     "SearchProfileBody-Output": {
       excluded_neighborhoods: string[];
       is_condo_fee_in_budget: boolean;
+      max_bedrooms?: number | null;
       max_monthly_cost_usd: number;
       min_area_m2?: number | null;
       min_bathrooms?: number | null;

@@ -16,6 +16,7 @@ class RejectionReason(StrEnum):
     OVER_BUDGET = "over_budget"
     UNDER_MINIMUM_PRICE = "under_minimum_price"
     TOO_FEW_BEDROOMS = "too_few_bedrooms"
+    TOO_MANY_BEDROOMS = "too_many_bedrooms"
     TOO_FEW_BATHROOMS = "too_few_bathrooms"
     TOO_SMALL = "too_small"
     EXCLUDED_NEIGHBORHOOD = "excluded_neighborhood"
@@ -82,6 +83,7 @@ def _rejection_reasons(
             RejectionReason.UNDER_MINIMUM_PRICE,
         ),
         (_is_below(listing.bedrooms, profile.min_bedrooms), RejectionReason.TOO_FEW_BEDROOMS),
+        (_is_above(listing.bedrooms, profile.max_bedrooms), RejectionReason.TOO_MANY_BEDROOMS),
         (_is_below(listing.bathrooms, profile.min_bathrooms), RejectionReason.TOO_FEW_BATHROOMS),
         (_is_below(listing.area_m2, profile.min_area_m2), RejectionReason.TOO_SMALL),
         (
@@ -94,6 +96,10 @@ def _rejection_reasons(
 
 def _is_below[Quantity: (int, Decimal)](value: Quantity | None, minimum: Quantity | None) -> bool:
     return value is not None and minimum is not None and value < minimum
+
+
+def _is_above(value: int | None, maximum: int | None) -> bool:
+    return value is not None and maximum is not None and value > maximum
 
 
 def _price_score(cost: Decimal, profile: SearchProfile) -> CriterionScore:

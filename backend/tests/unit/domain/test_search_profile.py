@@ -27,6 +27,8 @@ def test_normalizes_place_names_for_comparison() -> None:
         {"min_monthly_cost_usd": Decimal(1500)},
         {"min_area_m2": Decimal(0)},
         {"min_bedrooms": -1},
+        {"max_bedrooms": -1},
+        {"min_bedrooms": 3, "max_bedrooms": 2},
         {"min_score": 101},
         {
             "preferred_neighborhoods": frozenset({"Cumbayá"}),

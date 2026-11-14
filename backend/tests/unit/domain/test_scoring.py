@@ -52,8 +52,22 @@ def test_reports_every_failed_hard_filter() -> None:
     }
 
 
+def test_rejects_listings_with_more_bedrooms_than_the_maximum() -> None:
+    result = score_listing(a_listing(bedrooms=4), a_profile(max_bedrooms=3))
+
+    assert result.rejection_reasons == (RejectionReason.TOO_MANY_BEDROOMS,)
+
+
+def test_accepts_listings_with_exactly_the_maximum_bedrooms() -> None:
+    result = score_listing(a_listing(bedrooms=3), a_profile(min_bedrooms=3, max_bedrooms=3))
+
+    assert result.passed_hard_filters
+
+
 def test_does_not_reject_listings_for_missing_room_data() -> None:
-    result = score_listing(a_listing(bedrooms=None, area_m2=None), a_profile(min_bedrooms=3))
+    profile = a_profile(min_bedrooms=3, max_bedrooms=4)
+
+    result = score_listing(a_listing(bedrooms=None, area_m2=None), profile)
 
     assert result.passed_hard_filters
 

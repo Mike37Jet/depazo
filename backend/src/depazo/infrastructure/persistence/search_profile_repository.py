@@ -32,6 +32,7 @@ class SqlAlchemySearchProfileRepository:
         record.min_monthly_cost_usd = profile.min_monthly_cost_usd
         record.is_condo_fee_in_budget = profile.is_condo_fee_in_budget
         record.min_bedrooms = profile.min_bedrooms
+        record.max_bedrooms = profile.max_bedrooms
         record.min_bathrooms = profile.min_bathrooms
         record.min_area_m2 = profile.min_area_m2
         record.preferred_neighborhoods = sorted(profile.preferred_neighborhoods)
@@ -50,6 +51,7 @@ def _to_profile(record: SearchProfileRecord) -> SearchProfile:
         min_monthly_cost_usd=record.min_monthly_cost_usd,
         is_condo_fee_in_budget=record.is_condo_fee_in_budget,
         min_bedrooms=record.min_bedrooms,
+        max_bedrooms=record.max_bedrooms,
         min_bathrooms=record.min_bathrooms,
         min_area_m2=record.min_area_m2,
         preferred_neighborhoods=frozenset(record.preferred_neighborhoods),

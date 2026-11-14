@@ -114,7 +114,7 @@ Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el c
 
 **Implementado (v1, `domain/scoring.py`):**
 - Costo mensual = arriendo + alícuota, si el perfil la incluye en el presupuesto. Si el precio es desconocido, el anuncio se descarta.
-- Filtros duros: presupuesto máximo y mínimo, habitaciones, baños y m² mínimos y sectores excluidos. Un dato faltante no descarta el anuncio.
+- Filtros duros: presupuesto máximo y mínimo, habitaciones mínimas y máximas, baños y m² mínimos y sectores excluidos. Un dato faltante no descarta el anuncio.
 - Criterios blandos (pesos por defecto 0,5 / 0,25 / 0,25): **precio** (1 si cuesta hasta el 60 % del presupuesto, 0 si llega al tope), **m²** (0 en el mínimo, 1 al 150 % del mínimo) y **sector preferido** (1 o 0). Un dato desconocido vale 0,5, y un criterio que el perfil no define no cuenta.
 - Los sectores se comparan sin tildes, sin mayúsculas y sin espacios repetidos ("González Suárez" = "gonzalez suarez").
 - Pendiente: zona dibujada en el mapa (`ST_Within`), características obligatorias y deseables y antigüedad del anuncio.

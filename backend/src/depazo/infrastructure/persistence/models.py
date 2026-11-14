@@ -72,6 +72,7 @@ class SearchProfileRecord(Base):
     min_monthly_cost_usd: Mapped[Decimal | None] = mapped_column(MONEY)
     is_condo_fee_in_budget: Mapped[bool] = mapped_column(Boolean)
     min_bedrooms: Mapped[int | None] = mapped_column(SmallInteger)
+    max_bedrooms: Mapped[int | None] = mapped_column(SmallInteger)
     min_bathrooms: Mapped[int | None] = mapped_column(SmallInteger)
     min_area_m2: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     preferred_neighborhoods: Mapped[list[str]] = mapped_column(ARRAY(Text))

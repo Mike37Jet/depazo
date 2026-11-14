@@ -37,6 +37,7 @@ class SearchProfileDocument(BaseModel):
     min_monthly_cost_usd: Amount | None = None
     is_condo_fee_in_budget: bool = True
     min_bedrooms: RoomCount | None = None
+    max_bedrooms: RoomCount | None = None
     min_bathrooms: RoomCount | None = None
     min_area_m2: Annotated[Decimal, Field(gt=0, le=2000)] | None = None
     preferred_neighborhoods: Neighborhoods = frozenset()
@@ -50,6 +51,7 @@ class SearchProfileDocument(BaseModel):
             min_monthly_cost_usd=self.min_monthly_cost_usd,
             is_condo_fee_in_budget=self.is_condo_fee_in_budget,
             min_bedrooms=self.min_bedrooms,
+            max_bedrooms=self.max_bedrooms,
             min_bathrooms=self.min_bathrooms,
             min_area_m2=self.min_area_m2,
             preferred_neighborhoods=self.preferred_neighborhoods,

@@ -35,6 +35,7 @@ class SearchProfileBody(StrictModel):
     min_monthly_cost_usd: Amount | None = None
     is_condo_fee_in_budget: bool = True
     min_bedrooms: RoomCount | None = None
+    max_bedrooms: RoomCount | None = None
     min_bathrooms: RoomCount | None = None
     min_area_m2: Annotated[Decimal, Field(gt=0, le=2000, decimal_places=2), AsNumber] | None = None
     preferred_neighborhoods: Neighborhoods = []
@@ -48,6 +49,7 @@ class SearchProfileBody(StrictModel):
             min_monthly_cost_usd=self.min_monthly_cost_usd,
             is_condo_fee_in_budget=self.is_condo_fee_in_budget,
             min_bedrooms=self.min_bedrooms,
+            max_bedrooms=self.max_bedrooms,
             min_bathrooms=self.min_bathrooms,
             min_area_m2=self.min_area_m2,
             preferred_neighborhoods=frozenset(self.preferred_neighborhoods),
@@ -67,6 +69,7 @@ class SearchProfileBody(StrictModel):
             min_monthly_cost_usd=profile.min_monthly_cost_usd,
             is_condo_fee_in_budget=profile.is_condo_fee_in_budget,
             min_bedrooms=profile.min_bedrooms,
+            max_bedrooms=profile.max_bedrooms,
             min_bathrooms=profile.min_bathrooms,
             min_area_m2=profile.min_area_m2,
             preferred_neighborhoods=sorted(profile.preferred_neighborhoods),

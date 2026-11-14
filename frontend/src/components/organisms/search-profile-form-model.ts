@@ -5,6 +5,7 @@ export interface SearchProfileFormValues {
   minMonthlyCost: string;
   isCondoFeeInBudget: boolean;
   minBedrooms: string;
+  maxBedrooms: string;
   minBathrooms: string;
   minArea: string;
   preferredNeighborhoods: string[];
@@ -31,6 +32,7 @@ export function toFormValues(profile: SearchProfile | null): SearchProfileFormVa
     minMonthlyCost: asText(profile?.min_monthly_cost_usd),
     isCondoFeeInBudget: profile?.is_condo_fee_in_budget ?? true,
     minBedrooms: asText(profile?.min_bedrooms),
+    maxBedrooms: asText(profile?.max_bedrooms),
     minBathrooms: asText(profile?.min_bathrooms),
     minArea: asText(profile?.min_area_m2),
     preferredNeighborhoods: profile?.preferred_neighborhoods ?? [],
@@ -47,6 +49,7 @@ export function validateSearchProfile(
   const maxMonthlyCost = parseAmount(values.maxMonthlyCost);
   const minMonthlyCost = parseAmount(values.minMonthlyCost);
   const minBedrooms = parseCount(values.minBedrooms);
+  const maxBedrooms = parseCount(values.maxBedrooms);
   const minBathrooms = parseCount(values.minBathrooms);
   const minArea = parseAmount(values.minArea);
   const minScore = parseCount(values.minScore);
@@ -72,6 +75,15 @@ export function validateSearchProfile(
   }
   if (minBedrooms === "invalid" || (typeof minBedrooms === "number" && minBedrooms > MAX_ROOMS)) {
     errors.minBedrooms = `Usa un número entero entre 0 y ${MAX_ROOMS}.`;
+  }
+  if (maxBedrooms === "invalid" || (typeof maxBedrooms === "number" && maxBedrooms > MAX_ROOMS)) {
+    errors.maxBedrooms = `Usa un número entero entre 0 y ${MAX_ROOMS}.`;
+  } else if (
+    typeof maxBedrooms === "number" &&
+    typeof minBedrooms === "number" &&
+    maxBedrooms < minBedrooms
+  ) {
+    errors.maxBedrooms = "El máximo no puede ser menor que el mínimo.";
   }
   if (
     minBathrooms === "invalid" ||
@@ -106,6 +118,7 @@ export function validateSearchProfile(
       min_monthly_cost_usd: numberOrNull(minMonthlyCost),
       is_condo_fee_in_budget: values.isCondoFeeInBudget,
       min_bedrooms: numberOrNull(minBedrooms),
+      max_bedrooms: numberOrNull(maxBedrooms),
       min_bathrooms: numberOrNull(minBathrooms),
       min_area_m2: numberOrNull(minArea),
       preferred_neighborhoods: values.preferredNeighborhoods,

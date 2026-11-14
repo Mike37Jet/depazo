@@ -26,11 +26,21 @@ describe("validateSearchProfile", () => {
     });
   });
 
+  it("sends the maximum bedrooms when the user sets it", () => {
+    const values = { ...toFormValues(SAVED_PROFILE), maxBedrooms: "3" };
+
+    const outcome = validateSearchProfile(values, SAVED_PROFILE.weights);
+
+    expect(outcome).toMatchObject({ isValid: true, input: { min_bedrooms: 2, max_bedrooms: 3 } });
+  });
+
   it.each([
     [{ maxMonthlyCost: "" }, "maxMonthlyCost"],
     [{ maxMonthlyCost: "-5" }, "maxMonthlyCost"],
     [{ maxMonthlyCost: "500", minMonthlyCost: "600" }, "minMonthlyCost"],
     [{ minBedrooms: "1.5" }, "minBedrooms"],
+    [{ maxBedrooms: "25" }, "maxBedrooms"],
+    [{ minBedrooms: "3", maxBedrooms: "2" }, "maxBedrooms"],
     [{ minArea: "5000" }, "minArea"],
     [{ minScore: "101" }, "minScore"],
     [

@@ -29,6 +29,7 @@ type TextField =
   | "maxMonthlyCost"
   | "minMonthlyCost"
   | "minBedrooms"
+  | "maxBedrooms"
   | "minBathrooms"
   | "minArea"
   | "minScore";
@@ -125,6 +126,7 @@ export function SearchProfileForm({
 
       <InsetGroup title="Espacio">
         {textField("minBedrooms", "Habitaciones mínimas", "numeric", "Opcional")}
+        {textField("maxBedrooms", "Habitaciones máximas", "numeric", "Opcional")}
         {textField("minBathrooms", "Baños mínimos", "numeric", "Opcional")}
         {textField("minArea", "Área mínima (m²)", "decimal", "Opcional")}
       </InsetGroup>

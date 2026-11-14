@@ -5,6 +5,7 @@ export const SAVED_PROFILE: SearchProfile = {
   min_monthly_cost_usd: null,
   is_condo_fee_in_budget: true,
   min_bedrooms: 2,
+  max_bedrooms: null,
   min_bathrooms: null,
   min_area_m2: null,
   preferred_neighborhoods: ["La Carolina"],
