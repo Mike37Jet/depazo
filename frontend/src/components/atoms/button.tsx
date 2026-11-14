@@ -1,11 +1,12 @@
 import type { ButtonHTMLAttributes } from "react";
 import { joinClassNames } from "../class-names";
 
-export type ButtonVariant = "primary" | "secondary" | "plain" | "destructive";
+export type ButtonVariant = "primary" | "secondary" | "outlined" | "plain" | "destructive";
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: "bg-accent-fill text-on-accent",
   secondary: "bg-surface-2 text-accent",
+  outlined: "border border-separator bg-surface text-label",
   plain: "bg-transparent text-accent",
   destructive: "bg-transparent text-danger",
 };

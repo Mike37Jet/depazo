@@ -119,7 +119,8 @@ export function SignInForm({
           Usar otro email
         </Button>
       ) : (
-        <Button variant="secondary" isFullWidth disabled={isPending} onClick={onSignInWithGoogle}>
+        <Button variant="outlined" isFullWidth disabled={isPending} onClick={onSignInWithGoogle}>
+          <img src="/google-logo.svg" alt="" aria-hidden="true" className="size-5" />
           Continuar con Google
         </Button>
       )}
