@@ -21,6 +21,35 @@ describe("SignInPage", () => {
     expect(auth.requestedCodes).toEqual(["persona@correo.test"]);
   });
 
+  it("starts the google sign-in when the user chooses it", async () => {
+    const auth = new FakeAuthGateway();
+    const { user } = renderApp("/", auth);
+
+    await user.click(await screen.findByRole("button", { name: "Continuar con Google" }));
+
+    expect(auth.googleSignInCount).toBe(1);
+    expect(auth.requestedCodes).toEqual([]);
+  });
+
+  it("tells the user when the google sign-in did not complete", async () => {
+    const auth = new FakeAuthGateway(null, true);
+    renderApp("/", auth);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos iniciar tu sesión");
+  });
+
+  it("clears the google failure once the user asks for a code", async () => {
+    const auth = new FakeAuthGateway(null, true);
+    const { user } = renderApp("/", auth);
+
+    await user.type(await screen.findByLabelText("Email"), "persona@correo.test");
+    await user.click(screen.getByRole("button", { name: "Enviarme un código" }));
+
+    expect(await screen.findByLabelText("Código")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(auth.hasRedirectSignInFailed()).toBe(false);
+  });
+
   it("explains an invalid email before contacting the server", async () => {
     const auth = new FakeAuthGateway();
     const { user } = renderApp("/", auth);

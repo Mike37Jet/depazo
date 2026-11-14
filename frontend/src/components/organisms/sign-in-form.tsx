@@ -13,6 +13,7 @@ export interface SignInFormProps {
   onRequestCode: (email: string) => void;
   onVerifyCode: (code: string) => void;
   onChangeEmail: () => void;
+  onSignInWithGoogle: () => void;
 }
 
 function buttonLabel(step: SignInStep, isPending: boolean): string {
@@ -33,6 +34,7 @@ export function SignInForm({
   onRequestCode,
   onVerifyCode,
   onChangeEmail,
+  onSignInWithGoogle,
 }: SignInFormProps) {
   const fieldId = useId();
   const [draftEmail, setDraftEmail] = useState(email);
@@ -112,9 +114,13 @@ export function SignInForm({
       <Button type="submit" isFullWidth disabled={isPending}>
         {buttonLabel(step, isPending)}
       </Button>
-      {step === "code" && (
+      {step === "code" ? (
         <Button variant="plain" onClick={onChangeEmail}>
           Usar otro email
+        </Button>
+      ) : (
+        <Button variant="secondary" isFullWidth disabled={isPending} onClick={onSignInWithGoogle}>
+          Continuar con Google
         </Button>
       )}
     </form>

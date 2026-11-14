@@ -44,7 +44,7 @@ flowchart LR
 | **Ingesta (worker)** | Mismo paquete Python, CLI `depazo ingest` | Recolectar → normalizar → deduplicar → guardar → puntuar → notificar |
 | **Extensión de navegador** | Chrome MV3, TypeScript, esbuild, Zod (mini) | Captura los anuncios que el usuario ve en Plusvalía y Facebook Marketplace (Properati no hace falta: comparte inventario con iCasas). v1: los guarda en `chrome.storage.local` y los exporta a un JSON `depazo.capture` que se importa con `depazo import`. Cuando exista la API, los enviará a la cuenta del usuario |
 | **Base de datos** | Supabase Postgres + PostGIS | Datos de negocio + consultas geoespaciales |
-| **Auth** | Supabase Auth (v1: código de un solo uso por email; Google pendiente). Se usa código y no magic link porque en iPhone el link abre Safari y no la PWA instalada | Identidad; la API valida el JWT con el JWKS de Supabase |
+| **Auth** | Supabase Auth: código de un solo uso por email y Google (OAuth con PKCE). Se usa código y no magic link porque en iPhone el link abre Safari y no la PWA instalada; por lo mismo, Google no reemplaza al código, que queda como alternativa | Identidad; la API valida el JWT con el JWKS de Supabase |
 | **Notificaciones** | Web Push (`pywebpush`, VAPID) + email (Resend) | Alertas inmediatas y resumen diario |
 | **Geocoding** | Nominatim (OSM), máximo 1 req/s, con caché en DB | Coordenadas para anuncios sin lat/lon |
 

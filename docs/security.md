@@ -38,7 +38,7 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 | **Fallas criptográficas** | HTTPS en todos lados (HSTS); secretos fuera del código; contraseñas gestionadas por Supabase (no guardamos ninguna); claves VAPID rotables |
 | **Inyección** | SQL solo a través del ORM o con parámetros enlazados; el HTML de los portales se parsea con selectolax y nunca se ejecuta; sin `eval` ni `subprocess` con datos externos |
 | **Diseño inseguro** | Este documento y el modelo de amenazas; los casos de abuso se consideran al diseñar cada feature |
-| **Fallas de autenticación** | Login delegado a Supabase (código de un solo uso por email; Google OAuth pendiente); validación estricta del JWT; rate limiting en los endpoints de cuenta |
+| **Fallas de autenticación** | Login delegado a Supabase (código de un solo uso por email y Google OAuth con PKCE; el secreto del cliente de Google vive solo en Supabase); validación estricta del JWT; rate limiting en los endpoints de cuenta |
 | **Integridad de software y datos** | Validación con Pydantic de todo dato externo (portales, requests); migraciones versionadas; despliegue solo desde el CI |
 | **Fallas de logging y alertas** | structlog en JSON; nunca se loguean tokens, emails completos ni zonas; Sentry con `send_default_pii=False`; alerta en GitHub si la ingesta falla |
 | **Mal manejo de condiciones excepcionales** | Excepciones de dominio tipadas que se traducen a respuestas HTTP genéricas; nunca se devuelven trazas al cliente; nunca un `except` o `catch` vacío (ver `docs/conventions.md`) |

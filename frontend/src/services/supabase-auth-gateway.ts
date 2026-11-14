@@ -15,7 +15,12 @@ export class SupabaseAuthGateway implements AuthGateway {
 
   constructor(url: string, publishableKey: string) {
     this.client = createClient(url, publishableKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: "pkce",
+      },
     });
   }
 
@@ -51,12 +56,39 @@ export class SupabaseAuthGateway implements AuthGateway {
     }
   }
 
+  async signInWithGoogle(): Promise<void> {
+    const { error } = await this.client.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) {
+      throw new AuthRequestError(error.message);
+    }
+  }
+
+  hasRedirectSignInFailed(): boolean {
+    return isFailedSignInRedirect(window.location.search, window.location.hash);
+  }
+
+  dismissRedirectSignInFailure(): void {
+    if (this.hasRedirectSignInFailed()) {
+      window.history.replaceState(window.history.state, "", window.location.pathname);
+    }
+  }
+
   async signOut(): Promise<void> {
     const { error } = await this.client.auth.signOut();
     if (error) {
       throw new AuthRequestError(error.message);
     }
   }
+}
+
+export function isFailedSignInRedirect(search: string, hash: string): boolean {
+  return (
+    new URLSearchParams(search).has("error") ||
+    new URLSearchParams(hash.replace(/^#/, "")).has("error")
+  );
 }
 
 function toSession(session: SupabaseSession | null): Session | null {

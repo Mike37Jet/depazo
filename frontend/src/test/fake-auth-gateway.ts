@@ -9,11 +9,14 @@ export const VALID_CODE = "123456";
 
 export class FakeAuthGateway implements AuthGateway {
   readonly requestedCodes: string[] = [];
+  googleSignInCount = 0;
   private session: Session | null;
+  private isRedirectSignInFailed: boolean;
   private readonly listeners = new Set<SessionListener>();
 
-  constructor(session: Session | null = null) {
+  constructor(session: Session | null = null, isRedirectSignInFailed = false) {
     this.session = session;
+    this.isRedirectSignInFailed = isRedirectSignInFailed;
   }
 
   async currentSession(): Promise<Session | null> {
@@ -34,6 +37,18 @@ export class FakeAuthGateway implements AuthGateway {
       throw new AuthRequestError("invalid code");
     }
     this.change({ accessToken: "test-token", email });
+  }
+
+  async signInWithGoogle(): Promise<void> {
+    this.googleSignInCount += 1;
+  }
+
+  hasRedirectSignInFailed(): boolean {
+    return this.isRedirectSignInFailed;
+  }
+
+  dismissRedirectSignInFailure(): void {
+    this.isRedirectSignInFailed = false;
   }
 
   async signOut(): Promise<void> {

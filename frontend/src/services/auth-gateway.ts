@@ -10,6 +10,9 @@ export interface AuthGateway {
   onSessionChange(listener: SessionListener): () => void;
   sendSignInCode(email: string): Promise<void>;
   verifySignInCode(email: string, code: string): Promise<void>;
+  signInWithGoogle(): Promise<void>;
+  hasRedirectSignInFailed(): boolean;
+  dismissRedirectSignInFailure(): void;
   signOut(): Promise<void>;
 }
 
