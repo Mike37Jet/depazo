@@ -7,8 +7,9 @@ const meta = {
   component: EmptyState,
   args: {
     icon: SearchX,
-    title: "Aún no hay coincidencias",
-    message: "Prueba subir tu presupuesto, bajar el puntaje mínimo o quitar sectores excluidos.",
+    title: "Ningún anuncio cumple tus filtros",
+    message:
+      "Revisamos 555 anuncios y ninguno entra en tu presupuesto, espacio o sectores. Prueba subir el presupuesto o bajar los mínimos.",
   },
 } satisfies Meta<typeof EmptyState>;
 export default meta;
@@ -16,4 +17,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const WithoutAction: Story = {};
-export const WithAction: Story = { args: { action: <Button>Ajustar búsqueda</Button> } };
+export const WithAction: Story = { args: { action: <Button>Ajustar filtros</Button> } };

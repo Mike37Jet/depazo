@@ -31,3 +31,18 @@ export function describeFilters(profile: SearchProfile): FilterChip[] {
   ];
   return chips.filter((chip): chip is FilterChip => chip !== null);
 }
+
+export interface ScoreWeights {
+  price: number;
+  area: number;
+  neighborhood: number;
+}
+
+const PERCENT = 100;
+const PERCENT_SIGN = "\u00a0%";
+
+export function describeScoreWeights(weights: ScoreWeights): string {
+  const total = weights.price + weights.area + weights.neighborhood;
+  const share = (weight: number) => Math.round((weight / total) * PERCENT);
+  return `precio (${share(weights.price)}${PERCENT_SIGN}), superficie (${share(weights.area)}${PERCENT_SIGN}) y sector (${share(weights.neighborhood)}${PERCENT_SIGN})`;
+}

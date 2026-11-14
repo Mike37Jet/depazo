@@ -47,12 +47,29 @@ describe("MatchesPage", () => {
     );
   });
 
-  it("suggests loosening the search when nothing matches", async () => {
+  it("explains that every listing fails the filters", async () => {
     server.use(http.get(`${API_BASE_URL}/me/matches`, () => HttpResponse.json(aReport([]))));
 
     renderApp("/");
 
-    expect(await screen.findByText("Aún no hay coincidencias")).toBeInTheDocument();
+    expect(await screen.findByText("Ningún anuncio cumple tus filtros")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ajustar filtros" })).toHaveAttribute(
+      "href",
+      "/busqueda",
+    );
+  });
+
+  it("explains that listings pass the filters but miss the minimum score", async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/me/matches`, () =>
+        HttpResponse.json({ ...aReport([]), rejected_count: 6 }),
+      ),
+    );
+
+    renderApp("/");
+
+    expect(await screen.findByText("Ninguno llega a tu puntaje mínimo")).toBeInTheDocument();
+    expect(screen.getByText(/^4 anuncios cumplen tus filtros/)).toBeInTheDocument();
   });
 
   it("offers a retry when the api fails", async () => {

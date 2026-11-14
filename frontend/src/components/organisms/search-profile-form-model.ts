@@ -19,7 +19,7 @@ export type ValidationOutcome =
   | { isValid: false; errors: SearchProfileFormErrors };
 
 const DEFAULT_MIN_SCORE = 60;
-const DEFAULT_WEIGHTS = { price: 0.5, area: 0.25, neighborhood: 0.25 };
+export const DEFAULT_WEIGHTS = { price: 0.5, area: 0.25, neighborhood: 0.25 };
 const MAX_MONTHLY_COST = 100_000;
 const MAX_ROOMS = 20;
 const MAX_AREA = 2000;

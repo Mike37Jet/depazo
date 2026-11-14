@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useId, useState } from "react";
 import type { PlaceOption } from "../../format/place-name";
+import { describeScoreWeights } from "../../format/search-profile";
 import type { SearchProfile, SearchProfileInput } from "../../services/api-client";
 import { Button } from "../atoms/button";
 import { Input } from "../atoms/input";
@@ -9,6 +10,7 @@ import { InsetGroup } from "../molecules/inset-group";
 import { StatusMessage } from "../molecules/status-message";
 import { TagInput } from "../molecules/tag-input";
 import {
+  DEFAULT_WEIGHTS,
   type SearchProfileFormErrors,
   type SearchProfileFormValues,
   toFormValues,
@@ -144,13 +146,13 @@ export function SearchProfileForm({
         )}
       </InsetGroup>
 
-      <InsetGroup title="Alertas">
+      <InsetGroup title="Puntaje">
         {textField(
           "minScore",
           "Puntaje mínimo",
           "numeric",
           "60",
-          "Solo verás y te avisaremos de anuncios con este puntaje o más.",
+          `De 0 a 100, mide qué tan bien encaja cada anuncio según ${describeScoreWeights(profile?.weights ?? DEFAULT_WEIGHTS)}. Solo verás y te avisaremos de los que lleguen a este mínimo; si no ves resultados, bájalo.`,
         )}
       </InsetGroup>
 

@@ -8,6 +8,7 @@ import { EmptyState } from "../components/molecules/empty-state";
 import { StatusMessage } from "../components/molecules/status-message";
 import { MatchCard } from "../components/organisms/match-card";
 import { TabPage } from "../components/templates/tab-page";
+import { explainEmptyReport } from "../format/matches-report";
 import { describeFilters } from "../format/search-profile";
 import { useMatches } from "../hooks/use-matches";
 import { useSearchProfile } from "../hooks/use-search-profile";
@@ -67,16 +68,7 @@ export function MatchesPage() {
         />
       )}
       {report && report.matches.length === 0 && (
-        <EmptyState
-          icon={SearchX}
-          title="Aún no hay coincidencias"
-          message="Prueba subir tu presupuesto, bajar el puntaje mínimo o quitar sectores excluidos."
-          action={
-            <Link to="/busqueda" className={buttonClasses("primary")}>
-              Ajustar búsqueda
-            </Link>
-          }
-        />
+        <EmptyReport report={report} minScore={profile.data?.min_score} />
       )}
       {report && report.matches.length > 0 && (
         <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -112,5 +104,21 @@ function MatchesSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+function EmptyReport({ report, minScore }: { report: Matches; minScore: number | undefined }) {
+  const explanation = explainEmptyReport(report, minScore);
+  return (
+    <EmptyState
+      icon={SearchX}
+      title={explanation.title}
+      message={explanation.message}
+      action={
+        <Link to="/busqueda" className={buttonClasses("primary")}>
+          {explanation.actionLabel}
+        </Link>
+      }
+    />
   );
 }
