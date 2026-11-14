@@ -74,11 +74,11 @@ Backend (desde `backend/`):
 | Importar captura | `uv run depazo import <archivo.json> [--save]` |
 | Ingesta programada | LaunchAgent `com.depazo.ingest` cada 3 h → `scripts/scheduled_ingest.sh` desde el clon `~/.local/share/depazo/app` (ADR 0018). Config en `~/.config/depazo/{env,profile.json}`, log en `~/Library/Logs/depazo/ingest.log`. Ejecutar ya: `launchctl kickstart gui/$(id -u)/com.depazo.ingest` |
 | Ranking | `uv run depazo match --profile <perfil.json> [--limit 20] [--output json]` (ejemplo en `docs/examples/search_profile.json`) |
-| API | `uv run uvicorn depazo.bootstrap:create_api_app --factory` · endpoints `GET /health`, `GET`/`PUT /me/search-profile`, `GET /me/matches?limit=`. Variables: `DEPAZO_DATABASE_URL`, `DEPAZO_SUPABASE_URL` (origen https del proyecto), opcionales `DEPAZO_CORS_ORIGINS` (JSON), `DEPAZO_REQUESTS_PER_MINUTE` (60) y `DEPAZO_IS_OPENAPI_PUBLISHED` (`false`; `true` solo fuera de producción) |
+| API | `uv run uvicorn depazo.bootstrap:create_api_app --factory` · endpoints `GET /health`, `GET`/`PUT /me/search-profile`, `GET /me/matches?limit=`, `GET /neighborhoods`. Variables: `DEPAZO_DATABASE_URL`, `DEPAZO_SUPABASE_URL` (origen https del proyecto), opcionales `DEPAZO_CORS_ORIGINS` (JSON), `DEPAZO_REQUESTS_PER_MINUTE` (60) y `DEPAZO_IS_OPENAPI_PUBLISHED` (`false`; `true` solo fuera de producción) |
 
 Extensión (desde `extension/`): `pnpm install`, `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` (genera `dist/`, que se carga en `chrome://extensions` → "Cargar descomprimida").
 
-Frontend (previstos): `pnpm dev`, `pnpm test`, `pnpm e2e`, `pnpm gen:api`.
+Frontend (desde `frontend/`): `pnpm install`, `pnpm dev` (proxy `/api` → `localhost:8000`, o `DEPAZO_API_PROXY_TARGET`), `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm storybook`, `pnpm gen:api` (regenera `src/api/schema.ts` desde `depazo openapi`; corre openapi-typescript con `pnpm dlx` porque necesita TypeScript 5). Variables en `frontend/.env.local` (ver `.env.example`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (pública) y `VITE_API_URL`. Pendiente: `pnpm e2e`.
 
 ## Reglas de código (no negociables)
 

@@ -40,11 +40,11 @@ flowchart LR
 | Componente | Tecnología | Responsabilidad |
 |---|---|---|
 | **Frontend (PWA)** | Vite + React + TypeScript, TanStack Router/Query, Tailwind + shadcn/ui, vite-plugin-pwa, MapLibre | Login, configurar búsquedas (dibujar zona en mapa), ver ranking, favoritos, suscripción a push |
-| **API** | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic | v1: leer y reemplazar el perfil de búsqueda del usuario (`/me/search-profile`) y listar sus matches (`/me/matches`). Pendiente: varios perfiles por usuario y suscripciones push |
+| **API** | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic | v1: leer y reemplazar el perfil de búsqueda del usuario (`/me/search-profile`) , listar sus matches (`/me/matches`) y los sectores con anuncios para autocompletar (`/neighborhoods`, requiere sesión). Pendiente: varios perfiles por usuario y suscripciones push |
 | **Ingesta (worker)** | Mismo paquete Python, CLI `depazo ingest` | Recolectar → normalizar → deduplicar → guardar → puntuar → notificar |
 | **Extensión de navegador** | Chrome MV3, TypeScript, esbuild, Zod (mini) | Captura los anuncios que el usuario ve en Plusvalía y Facebook Marketplace (Properati no hace falta: comparte inventario con iCasas). v1: los guarda en `chrome.storage.local` y los exporta a un JSON `depazo.capture` que se importa con `depazo import`. Cuando exista la API, los enviará a la cuenta del usuario |
 | **Base de datos** | Supabase Postgres + PostGIS | Datos de negocio + consultas geoespaciales |
-| **Auth** | Supabase Auth (magic link + Google) | Identidad; la API valida el JWT con el JWKS de Supabase |
+| **Auth** | Supabase Auth (v1: código de un solo uso por email; Google pendiente). Se usa código y no magic link porque en iPhone el link abre Safari y no la PWA instalada | Identidad; la API valida el JWT con el JWKS de Supabase |
 | **Notificaciones** | Web Push (`pywebpush`, VAPID) + email (Resend) | Alertas inmediatas y resumen diario |
 | **Geocoding** | Nominatim (OSM), máximo 1 req/s, con caché en DB | Coordenadas para anuncios sin lat/lon |
 
