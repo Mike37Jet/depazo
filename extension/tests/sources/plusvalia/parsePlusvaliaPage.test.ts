@@ -2,10 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { CapturedListing } from "../../../src/capture/capturedListing";
-import {
-  parsePlusvaliaPage,
-  parseSpanishNumber,
-} from "../../../src/sources/plusvalia/parsePlusvaliaPage";
+import { parsePlusvaliaPage } from "../../../src/sources/plusvalia/parsePlusvaliaPage";
 
 const CAPTURED_AT = new Date("2026-11-13T12:00:00.000Z");
 const FIXTURE_PATH = join(import.meta.dirname, "../../fixtures/plusvalia/quito_page.html");
@@ -76,16 +73,5 @@ describe("parsePlusvaliaPage", () => {
       <div data-qa="POSTING_CARD_GALLERY"><img alt="Depa" src="https://evil.test/a.jpg"></div></div>`;
 
     expect(parsePlusvaliaPage(documentFrom(html), CAPTURED_AT)[0]?.imageUrl).toBeNull();
-  });
-});
-
-describe("parseSpanishNumber", () => {
-  it.each([
-    ["1.100", 1100],
-    ["301,4", 301.4],
-    ["5454", 5454],
-    ["consultar", null],
-  ])("parses %s as %s", (text, expected) => {
-    expect(parseSpanishNumber(text)).toBe(expected);
   });
 });

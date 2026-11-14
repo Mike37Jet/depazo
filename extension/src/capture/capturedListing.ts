@@ -3,6 +3,9 @@ import * as z from "zod/mini";
 export const CAPTURE_FORMAT = "depazo.capture";
 export const CAPTURE_FORMAT_VERSION = 1;
 export const MAX_STORED_LISTINGS = 5000;
+export const CAPTURE_SOURCES = ["plusvalia", "marketplace"] as const;
+
+export type CaptureSource = (typeof CAPTURE_SOURCES)[number];
 
 const httpsUrl = z.url({ protocol: /^https$/ }).check(z.maxLength(2048));
 const optionalAmount = z.nullable(z.number().check(z.nonnegative()));
@@ -10,7 +13,7 @@ const optionalCount = z.nullable(z.int().check(z.nonnegative(), z.lte(50)));
 const optionalPlace = z.nullable(z.string().check(z.minLength(1), z.maxLength(120)));
 
 export const capturedListingSchema = z.strictObject({
-  source: z.literal("plusvalia"),
+  source: z.enum(CAPTURE_SOURCES),
   externalId: z.string().check(z.regex(/^[\w-]{1,64}$/)),
   url: httpsUrl,
   title: z.string().check(z.minLength(1), z.maxLength(300)),

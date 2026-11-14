@@ -3,6 +3,7 @@ import {
   CAPTURE_FORMAT_VERSION,
   type CapturedListing,
   type CaptureExport,
+  type CaptureSource,
   MAX_STORED_LISTINGS,
 } from "./capturedListing";
 
@@ -36,4 +37,14 @@ export function buildCaptureExport(
 
 export function exportFileName(exportedAt: Date): string {
   return `depazo-captura-${exportedAt.toISOString().slice(0, 10)}.json`;
+}
+
+export function countBySource(
+  listings: readonly CapturedListing[],
+): ReadonlyMap<CaptureSource, number> {
+  const counts = new Map<CaptureSource, number>();
+  for (const listing of listings) {
+    counts.set(listing.source, (counts.get(listing.source) ?? 0) + 1);
+  }
+  return counts;
 }

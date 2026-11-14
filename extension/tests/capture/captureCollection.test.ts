@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCaptureExport,
+  countBySource,
   exportFileName,
   mergeCaptures,
 } from "../../src/capture/captureCollection";
@@ -55,5 +56,20 @@ describe("buildCaptureExport", () => {
 
   it("names the file after the export date", () => {
     expect(exportFileName(new Date("2026-11-13T12:00:00Z"))).toBe("depazo-captura-2026-11-13.json");
+  });
+});
+
+describe("countBySource", () => {
+  it("counts captured listings per portal", () => {
+    const counts = countBySource([
+      aCapturedListing({ externalId: "1" }),
+      aCapturedListing({ externalId: "2" }),
+      aCapturedListing({ externalId: "3", source: "marketplace" }),
+    ]);
+
+    expect([...counts]).toEqual([
+      ["plusvalia", 2],
+      ["marketplace", 1],
+    ]);
   });
 });

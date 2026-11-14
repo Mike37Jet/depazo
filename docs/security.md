@@ -59,6 +59,13 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 - El contenido de los anuncios **no es confiable**. Se guarda como texto plano: se eliminan las etiquetas HTML y se normalizan espacios. Las URLs se validan (solo `https` y el dominio del portal).
 - Las imágenes se referencian por URL validada; no se descargan ni se procesan en el servidor.
 
+### Extensión de navegador
+
+- Solo pide `storage` y acceso a `www.plusvalia.com` y `www.facebook.com`; no tiene service worker ni red propia.
+- En Facebook el script corre en todo el dominio (Marketplace es una SPA), pero solo captura en páginas `/marketplace/<ciudad>/propertyrentals` y solo lee las tarjetas de anuncios.
+- Nunca lee nombres, teléfonos ni perfiles de vendedores. Todo queda en `chrome.storage.local` hasta que el usuario exporta.
+- Lo capturado se valida con Zod al guardarlo y con Pydantic (`extra="forbid"`, límites, hosts permitidos) al importarlo.
+
 ### PWA (React)
 - **Nunca se usa `dangerouslySetInnerHTML`.** React escapa todo el texto por defecto.
 - Los enlaces externos llevan `rel="noopener noreferrer"`.

@@ -1,5 +1,5 @@
-import { buildCaptureExport, exportFileName } from "../capture/captureCollection";
-import type { CapturedListing } from "../capture/capturedListing";
+import { buildCaptureExport, countBySource, exportFileName } from "../capture/captureCollection";
+import type { CapturedListing, CaptureSource } from "../capture/capturedListing";
 import { clearCaptures, loadCaptures } from "../capture/chromeCaptureStorage";
 
 type PopupState = "loading" | "empty" | "ready" | "error";
@@ -7,6 +7,10 @@ type PopupState = "loading" | "empty" | "ready" | "error";
 const POPUP_STATES: readonly PopupState[] = ["loading", "empty", "ready", "error"];
 const CLEAR_CONFIRMATION =
   "¿Borrar todos los anuncios guardados? Esta acción no se puede deshacer.";
+const SOURCE_LABELS: Readonly<Record<CaptureSource, string>> = {
+  plusvalia: "Plusvalía",
+  marketplace: "Marketplace",
+};
 const DATE_FORMAT = new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" });
 
 function elementById(id: string): HTMLElement {
@@ -29,6 +33,12 @@ function latestCaptureDate(listings: readonly CapturedListing[]): Date | null {
     .sort()
     .at(-1);
   return latest === undefined ? null : new Date(latest);
+}
+
+function describeSources(listings: readonly CapturedListing[]): string {
+  return [...countBySource(listings)]
+    .map(([source, count]) => `${SOURCE_LABELS[source]} ${count}`)
+    .join(" · ");
 }
 
 function downloadExport(listings: readonly CapturedListing[]): void {
@@ -57,6 +67,7 @@ async function render(): Promise<void> {
     return;
   }
   elementById("listing-count").textContent = String(listings.length);
+  elementById("source-breakdown").textContent = describeSources(listings);
   const latest = latestCaptureDate(listings);
   elementById("last-capture").textContent =
     latest === null ? "" : `Última captura: ${DATE_FORMAT.format(latest)}`;

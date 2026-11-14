@@ -1,4 +1,10 @@
 import { type CapturedListing, capturedListingSchema } from "../../capture/capturedListing";
+import {
+  firstNumberMatching,
+  httpsUrlOnHost,
+  normalizeWhitespace,
+  parseSpanishNumber,
+} from "../listingText";
 
 export const PLUSVALIA_ORIGIN = "https://www.plusvalia.com";
 
@@ -26,12 +32,6 @@ export function parsePlusvaliaPage(root: ParentNode, capturedAt: Date): Captured
   });
 }
 
-export function parseSpanishNumber(text: string): number | null {
-  const normalized = text.replaceAll(".", "").replace(",", ".");
-  const value = Number.parseFloat(normalized);
-  return Number.isFinite(value) ? value : null;
-}
-
 function parseCard(card: HTMLElement, capturedAt: Date): CapturedListing | null {
   const externalId = card.dataset.id;
   const listingPath = card.dataset.toPosting;
@@ -47,9 +47,9 @@ function parseCard(card: HTMLElement, capturedAt: Date): CapturedListing | null 
     title: titleFrom(card, neighborhood),
     monthlyRentUsd: usdAmountIn(textOf(card, SELECTORS.price)),
     condoFeeUsd: usdAmountIn(textOf(card, SELECTORS.condoFee)),
-    areaM2: featureValue(features, FEATURE_PATTERNS.areaM2),
-    bedrooms: featureValue(features, FEATURE_PATTERNS.bedrooms),
-    bathrooms: featureValue(features, FEATURE_PATTERNS.bathrooms),
+    areaM2: firstNumberMatching(features, FEATURE_PATTERNS.areaM2),
+    bedrooms: firstNumberMatching(features, FEATURE_PATTERNS.bedrooms),
+    bathrooms: firstNumberMatching(features, FEATURE_PATTERNS.bathrooms),
     neighborhood,
     city,
     imageUrl: imageUrlOf(card),
@@ -69,10 +69,6 @@ function textsOf(card: HTMLElement, selector: string): string[] {
   );
 }
 
-function normalizeWhitespace(text: string): string {
-  return text.replace(/\s+/g, " ").trim();
-}
-
 function canonicalListingUrl(listingPath: string): string {
   const url = new URL(listingPath, PLUSVALIA_ORIGIN);
   return `${PLUSVALIA_ORIGIN}${url.pathname}`;
@@ -81,16 +77,6 @@ function canonicalListingUrl(listingPath: string): string {
 function usdAmountIn(text: string): number | null {
   const match = USD_AMOUNT_PATTERN.exec(text);
   return match?.[1] === undefined ? null : parseSpanishNumber(match[1]);
-}
-
-function featureValue(features: readonly string[], pattern: RegExp): number | null {
-  for (const feature of features) {
-    const match = pattern.exec(feature);
-    if (match?.[1] !== undefined) {
-      return parseSpanishNumber(match[1]);
-    }
-  }
-  return null;
 }
 
 function splitLocality(locality: string): [string | null, string | null] {
@@ -111,13 +97,9 @@ function titleFrom(card: HTMLElement, neighborhood: string | null): string {
 }
 
 function imageUrlOf(card: HTMLElement): string | null {
-  const source = card.querySelector(SELECTORS.image)?.getAttribute("src");
-  if (!source || !URL.canParse(source)) {
-    return null;
-  }
-  const url = new URL(source);
-  if (url.protocol !== "https:" || !url.hostname.endsWith(IMAGE_HOST_SUFFIX)) {
-    return null;
-  }
-  return `${url.origin}${url.pathname}`;
+  const url = httpsUrlOnHost(
+    card.querySelector(SELECTORS.image)?.getAttribute("src"),
+    IMAGE_HOST_SUFFIX,
+  );
+  return url === null ? null : `${url.origin}${url.pathname}`;
 }

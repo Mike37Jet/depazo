@@ -22,7 +22,7 @@ PWA con React + TypeScript · API con FastAPI (Python) · Supabase (Postgres + P
 Proyecto personal y experimental, sin fines comerciales ([ADR 0016](docs/adr/0016-fuentes-de-datos.md)):
 
 - **Scraper** para sitios públicos sin protección técnica (iCasas), con baja frecuencia, `robots.txt` respetado y un User-Agent identificable. Si un sitio bloquea, el colector se detiene.
-- **Extensión de navegador** para Plusvalía: guarda los anuncios que tú ves mientras navegas con tu propia sesión. No hay bots en esos sitios.
+- **Extensión de navegador** para Plusvalía y Facebook Marketplace: guarda los anuncios que tú ves mientras navegas con tu propia sesión. No hay bots en esos sitios.
 - Nunca se evaden protecciones técnicas ni se guardan datos personales de los anunciantes.
 
 ## Probar la extensión
@@ -32,7 +32,7 @@ cd extension && pnpm install && pnpm build
 ```
 
 1. Abre `chrome://extensions`, activa el modo desarrollador y elige **Cargar descomprimida** → `extension/dist`.
-2. Navega por los resultados de arriendo de Plusvalía en Quito; los anuncios se guardan solos.
+2. Navega por los resultados de arriendo de Plusvalía o de [Marketplace](https://www.facebook.com/marketplace/quito/propertyrentals) en Quito; los anuncios se guardan solos.
 3. Abre la extensión, pulsa **Exportar JSON** e impórtalo:
 
 ```bash
