@@ -3,6 +3,7 @@ import json
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 from dataclasses import asdict
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -12,8 +13,15 @@ import typer
 
 from depazo.application.ports.listing_source import ListingSource, SourceUnavailableError
 from depazo.application.use_cases.collect_listings import CollectionReport, CollectListings
-from depazo.bootstrap import UnknownSourceError, open_capture_file_source, open_listing_source
+from depazo.application.use_cases.record_listings import RecordingSummary, RecordListings
+from depazo.bootstrap import (
+    UnknownSourceError,
+    open_capture_file_source,
+    open_listing_source,
+    open_unit_of_work_factory,
+)
 from depazo.domain.listing import Listing
+from depazo.infrastructure.persistence.database import DatabaseNotConfiguredError
 
 MAX_PAGES_PER_RUN = 20
 
@@ -31,6 +39,9 @@ def depazo() -> None:
 
 
 SourceOpener = Callable[[], AbstractAsyncContextManager[ListingSource]]
+SaveOption = Annotated[
+    bool, typer.Option("--save", help="Store listings in the database (DEPAZO_DATABASE_URL).")
+]
 
 
 @app.command(help="Collect listings from a source and print them.")
@@ -38,35 +49,64 @@ def ingest(
     source: Annotated[str, typer.Option(help="Source name, e.g. icasas.")] = "icasas",
     pages: Annotated[int, typer.Option(min=1, max=MAX_PAGES_PER_RUN)] = 1,
     output: Annotated[OutputFormat, typer.Option()] = OutputFormat.TABLE,
+    save: SaveOption = False,
 ) -> None:
-    _collect_and_print(lambda: open_listing_source(source), pages, output)
+    _collect_and_print(lambda: open_listing_source(source), pages, output, save)
 
 
 @app.command(name="import", help="Import listings captured with the browser extension.")
 def import_capture(
     capture_file: Annotated[Path, typer.Argument(help="JSON file exported by the extension.")],
     output: Annotated[OutputFormat, typer.Option()] = OutputFormat.TABLE,
+    save: SaveOption = False,
 ) -> None:
-    _collect_and_print(lambda: open_capture_file_source(capture_file), 1, output)
+    _collect_and_print(lambda: open_capture_file_source(capture_file), 1, output, save)
 
 
-def _collect_and_print(open_source: SourceOpener, pages: int, output: OutputFormat) -> None:
+def _collect_and_print(
+    open_source: SourceOpener, pages: int, output: OutputFormat, should_save: bool
+) -> None:
     try:
-        report = asyncio.run(_collect(open_source, pages))
-    except (UnknownSourceError, SourceUnavailableError) as error:
+        report, summary = asyncio.run(_collect(open_source, pages, should_save))
+    except (UnknownSourceError, SourceUnavailableError, DatabaseNotConfiguredError) as error:
         typer.secho(str(error), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from error
     if output is OutputFormat.JSON:
         typer.echo(json.dumps([asdict(listing) for listing in report.listings], default=str))
     else:
         _print_table(report)
+    if summary is not None:
+        _print_summary(summary)
     if report.was_blocked:
         typer.secho(f"{report.source} blocked the collector; stopped.", fg=typer.colors.YELLOW)
 
 
-async def _collect(open_source: SourceOpener, pages: int) -> CollectionReport:
+async def _collect(
+    open_source: SourceOpener, pages: int, should_save: bool
+) -> tuple[CollectionReport, RecordingSummary | None]:
+    if not should_save:
+        return await _collect_only(open_source, pages), None
+    async with open_unit_of_work_factory() as open_unit_of_work:
+        report = await _collect_only(open_source, pages)
+        summary = await RecordListings(open_unit_of_work, lambda: datetime.now(UTC)).execute(
+            report.listings
+        )
+    return report, summary
+
+
+async def _collect_only(open_source: SourceOpener, pages: int) -> CollectionReport:
     async with open_source() as source:
         return await CollectListings(source).execute(max_pages=pages)
+
+
+def _print_summary(summary: RecordingSummary) -> None:
+    typer.secho(
+        f"saved: {len(summary.new_listings)} new, "
+        f"{len(summary.repriced_listings)} with a new price, "
+        f"{summary.unchanged_count} unchanged",
+        fg=typer.colors.GREEN,
+        err=True,
+    )
 
 
 def _print_table(report: CollectionReport) -> None:

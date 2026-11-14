@@ -47,6 +47,7 @@ backend/src/depazo/
   infrastructure/{sources/<portal>,persistence,notifications,geocoding}/
   presentation/{api,cli}/
   bootstrap.py                composition root
+backend/migrations/           Alembic (versions/)
 backend/tests/{unit,integration,fixtures/<portal>}/
 frontend/src/
   components/{atoms,molecules,organisms,templates}/
@@ -67,8 +68,9 @@ Backend (desde `backend/`):
 | Tests | `uv run pytest` (`tests/unit`, `tests/integration`) |
 | Lint y formato | `uv run ruff check --fix` · `uv run ruff format` |
 | Tipos | `uv run mypy src tests` |
-| Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json]` |
-| Importar captura | `uv run depazo import <archivo.json>` |
+| Migraciones | `uv run alembic upgrade head` (lee `DEPAZO_DATABASE_URL`) |
+| Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json] [--save]` |
+| Importar captura | `uv run depazo import <archivo.json> [--save]` |
 
 Extensión (desde `extension/`): `pnpm install`, `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` (genera `dist/`, que se carga en `chrome://extensions` → "Cargar descomprimida").
 
