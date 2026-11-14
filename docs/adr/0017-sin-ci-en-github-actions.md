@@ -19,6 +19,6 @@ Las menciones a "CI" en los demás documentos (import-linter, cliente TS generad
 - **Otro proveedor de CI gratuito:** se puede retomar más adelante; hoy no se justifica para un solo desarrollador.
 
 ## Consecuencias
-- Nada impide que llegue a `main` un cambio con tests rotos: la disciplina es local. Un hook `pre-push` que corra estas verificaciones lo automatizaría.
+- `scripts/verify.sh` corre todas estas verificaciones y el hook `.githooks/pre-push` lo ejecuta antes de cada push (se activa una vez por clon con `git config core.hooksPath .githooks`). El script detecta Colima y, en Apple Silicon, usa una imagen de PostGIS arm64. Se puede saltar con `git push --no-verify`, así que sigue siendo disciplina local.
 - **El cron de ingesta del ADR 0005 también depende de GitHub Actions**, así que queda sin ubicación. Opciones: Cloud Run Jobs + Cloud Scheduler (plan B del ADR 0005), un cron en una máquina propia o ejecutar `depazo ingest --save` a mano mientras no haya usuarios.
 - Los tests de persistencia necesitan Docker en local. Sin Docker se saltan, así que conviene correrlos con Colima encendido.

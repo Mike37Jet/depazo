@@ -159,6 +159,6 @@ Proyecto personal y experimental, sin fines comerciales.
   - Scopes: `domain`, `application`, `infra`, `sources`, `db`, `api`, `cli`, `notifications`, `web`, `ui`, `pwa`, `ci`, `deps`, `docs`, `adr`.
   - Un commit = un cambio lógico.
   - **Sin coautoría de Claude:** los commits y PRs no llevan `Co-Authored-By: Claude…`, ni "Generated with Claude Code", ni ninguna otra atribución a la IA. El único autor es el usuario.
-- Sin CI (ADR 0017): antes de cada push a `main` se corren en local lint, formato, tipos, tests y build de `backend/` y `extension/` (comandos en el ADR). Los tests de persistencia necesitan Docker.
+- Sin CI (ADR 0017): `scripts/verify.sh` corre lint, formato, tipos, tests y build de `backend/` y `extension/`, y el hook `pre-push` lo ejecuta antes de cada push. Tras clonar: `git config core.hooksPath .githooks`. Los tests de persistencia necesitan Docker.
 - ADRs solo para decisiones que cambian la arquitectura o el stack.
 - Código, nombres y commits en inglés; documentación en español.
