@@ -27,6 +27,10 @@ describe("describeFacts", () => {
 
 describe("sourceName", () => {
   it("uses the portal's display name and falls back to the raw source", () => {
-    expect([sourceName("icasas"), sourceName("otro")]).toEqual(["iCasas", "otro"]);
+    expect([sourceName("icasas"), sourceName("arriendos_ec"), sourceName("otro")]).toEqual([
+      "iCasas",
+      "arriendos.ec",
+      "otro",
+    ]);
   });
 });

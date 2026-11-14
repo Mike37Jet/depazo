@@ -31,6 +31,7 @@ from depazo.infrastructure.persistence.database import (
 )
 from depazo.infrastructure.persistence.unit_of_work import SqlAlchemyUnitOfWork
 from depazo.infrastructure.profiles.profile_file import InvalidProfileFileError, load_search_profile
+from depazo.infrastructure.sources.arriendos_ec import source as arriendos_ec
 from depazo.infrastructure.sources.capture.capture_file import CapturedFileListingSource
 from depazo.infrastructure.sources.icasas import source as icasas
 from depazo.presentation.api.app import create_app
@@ -69,8 +70,17 @@ async def _icasas_source() -> AsyncIterator[ListingSource]:
         yield icasas.ICasasListingSource(client)
 
 
+@asynccontextmanager
+async def _arriendos_ec_source() -> AsyncIterator[ListingSource]:
+    async with PoliteHttpClient(
+        arriendos_ec.ALLOWED_HOSTS, arriendos_ec.MIN_INTERVAL_SECONDS
+    ) as client:
+        yield arriendos_ec.ArriendosEcListingSource(client)
+
+
 SOURCE_FACTORIES: dict[str, Callable[[], AbstractAsyncContextManager[ListingSource]]] = {
     "icasas": _icasas_source,
+    "arriendos_ec": _arriendos_ec_source,
 }
 
 

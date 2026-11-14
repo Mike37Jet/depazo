@@ -65,7 +65,7 @@ run_ingest() {
     log "push notifications disabled: DEPAZO_VAPID_PRIVATE_KEY is empty"
   fi
   local source_name
-  for source_name in ${DEPAZO_SCHEDULED_SOURCES:-icasas}; do
+  for source_name in ${DEPAZO_SCHEDULED_SOURCES:-icasas arriendos_ec}; do
     log "ingesting $source_name"
     uv run --quiet depazo ingest --source "$source_name" --pages "${DEPAZO_SCHEDULED_PAGES:-20}" \
       --save ${alert_options[@]+"${alert_options[@]}"} >/dev/null

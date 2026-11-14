@@ -13,3 +13,8 @@ def icasas_page_html() -> str:
 @pytest.fixture
 def browser_capture_path() -> Path:
     return FIXTURES_DIRECTORY / "capture" / "browser_capture.json"
+
+
+@pytest.fixture
+def arriendos_ec_feed_xml() -> str:
+    return (FIXTURES_DIRECTORY / "arriendos_ec" / "feed.xml").read_text(encoding="utf-8")

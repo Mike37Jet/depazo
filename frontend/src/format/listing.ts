@@ -1,5 +1,6 @@
 const SOURCE_NAMES: Record<string, string> = {
   icasas: "iCasas",
+  arriendos_ec: "arriendos.ec",
   plusvalia: "Plusvalía",
   facebook: "Facebook Marketplace",
   mercadolibre: "Mercado Libre",
