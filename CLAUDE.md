@@ -2,6 +2,8 @@
 
 Guía para Claude Code al trabajar en este repositorio.
 
+**Idioma:** responde **siempre en español** al usuario: mensajes, resúmenes, preguntas y explicaciones. El código, los nombres y los commits van en inglés; la documentación, en español.
+
 ## Proyecto: depazo
 
 PWA multiusuario que automatiza la búsqueda de departamentos en arriendo en **Quito, Ecuador**. Recopila anuncios de varios portales, los normaliza y deduplica, calcula un puntaje de compatibilidad con las preferencias de cada usuario y avisa (push + email) cuando aparecen oportunidades relevantes.
