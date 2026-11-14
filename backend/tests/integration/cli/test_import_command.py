@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from depazo.presentation.cli.main import app
@@ -23,3 +24,14 @@ def test_fails_with_readable_message_for_invalid_file(tmp_path: Path) -> None:
 
     assert result.exit_code == 1
     assert "not a valid depazo capture" in result.stderr
+
+
+def test_asks_for_a_database_url_before_saving(
+    browser_capture_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("DEPAZO_DATABASE_URL", raising=False)
+
+    result = runner.invoke(app, ["import", str(browser_capture_path), "--save"])
+
+    assert result.exit_code == 1
+    assert "DEPAZO_DATABASE_URL" in result.stderr

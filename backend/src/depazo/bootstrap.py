@@ -2,8 +2,16 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from depazo.application.ports.listing_repository import UnitOfWork
 from depazo.application.ports.listing_source import ListingSource
 from depazo.infrastructure.http.polite_client import PoliteHttpClient
+from depazo.infrastructure.persistence.database import (
+    create_database_engine,
+    database_url_from_environment,
+)
+from depazo.infrastructure.persistence.unit_of_work import SqlAlchemyUnitOfWork
 from depazo.infrastructure.sources.capture.capture_file import CapturedFileListingSource
 from depazo.infrastructure.sources.icasas import source as icasas
 
@@ -35,3 +43,13 @@ def open_listing_source(name: str) -> AbstractAsyncContextManager[ListingSource]
 @asynccontextmanager
 async def open_capture_file_source(path: Path) -> AsyncIterator[ListingSource]:
     yield CapturedFileListingSource(path)
+
+
+@asynccontextmanager
+async def open_unit_of_work_factory() -> AsyncIterator[Callable[[], UnitOfWork]]:
+    engine = create_database_engine(database_url_from_environment())
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        yield lambda: SqlAlchemyUnitOfWork(session_factory)
+    finally:
+        await engine.dispose()
