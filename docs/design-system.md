@@ -88,17 +88,45 @@ El puntaje **nunca se comunica solo con color**: siempre va el número, y opcion
 
 ## 6. Materiales y profundidad (Liquid Glass en la web)
 
-La HIG dice que Liquid Glass **es para la capa funcional** (barras de pestañas, navegación, sheets, controles flotantes) y que **no se usa en la capa de contenido**.
+Esta sección está verificada en la HIG (sección *Materials*). Lo que dice:
+- Liquid Glass es una **capa funcional que flota sobre el contenido**: barras de pestañas, controles y navegación. El contenido se ve pasar por debajo.
+- **No se usa en la capa de contenido**, con una excepción: un slider o un toggle toma la apariencia de vidrio solo **mientras se está usando**.
+- **Se usa con moderación**, solo en los elementos funcionales más importantes.
 
-| Token | Uso | CSS |
+### 6.1 Dos variantes
+
+| Variante | Qué hace | Cuándo usarla en depazo |
 |---|---|---|
-| `--glass-chrome` | Barra de pestañas, header al hacer scroll | `background: rgb(255 255 255 / .72); backdrop-filter: blur(24px) saturate(180%);` · oscuro: `rgb(28 28 30 / .72)` |
-| `--glass-thick` | Sheets, popovers | Más opaco (`/ .86`) y con más blur |
-| Contenido | Tarjetas y listas | **Sólido** (`--surface`), sin blur |
+| **Regular** (`.glass-regular`) | Desenfoca el fondo y ajusta su luminosidad para que el texto se lea. Es la que usan la mayoría de los componentes | Barra de pestañas, sheets, popovers, toasts, botones flotantes sobre la lista. Siempre que haya texto |
+| **Clear** (`.glass-clear`) | Muy traslúcida, para que el contenido rico siga siendo el protagonista | **Solo sobre fotos de propiedades**: atrás, compartir, favorito y la galería. Si la foto es clara, va **una capa oscura del 35 %** detrás (`--dim-media`) |
 
-- Con `prefers-reduced-transparency` y con `prefers-contrast: more`, los materiales pasan a ser sólidos y se agrega un borde visible.
-- **Sombras mínimas.** El contenido no lleva sombra: se separa por contraste entre `--bg` y `--surface`. Solo los elementos flotantes llevan sombra: `--shadow-float: 0 8px 32px rgb(0 0 0 / .12)`.
-- En lugar de líneas divisorias bajo el header, se usa un **efecto de borde al hacer scroll**: un fade o blur que aparece solo cuando hay contenido debajo.
+### 6.2 Anatomía del vidrio (en la web)
+
+1. **Forma de cápsula:** los controles relacionados van **agrupados en una sola cápsula** (por ejemplo, compartir + más). Una acción sola va en un círculo de 44 px.
+2. **Relleno de baja opacidad:** `--glass-regular-bg` o `--glass-clear-bg`.
+3. **Desenfoque y luminosidad del fondo:**
+   - Regular: `blur(16px) saturate(170%) brightness(1.12)` (en oscuro, `brightness(.8)`).
+   - Clear: `blur(5px) saturate(160%)`.
+4. **Borde especular:** luz en el borde superior y un reflejo tenue abajo: `inset 0 1px 1px var(--glass-rim-top)`, `inset 0 -1px 1px var(--glass-rim-bottom)` y `inset 0 0 0 .5px var(--glass-rim-edge)`.
+5. **Brillo diagonal:** un `::before` con un degradado de 135° que simula la luz sobre el material.
+6. **Sombra suave** solo hacia afuera (`--glass-shadow`), para que el elemento parezca flotar.
+7. **Contenido con vibrancy:** el texto y los íconos sobre el vidrio van con un peso un poco mayor. Sobre las fotos, en blanco (`--on-media`) y con la capa de oscurecimiento.
+
+La refracción real (`backdrop-filter: url(#svg)`) solo funciona en Chromium, así que no se usa.
+
+### 6.3 Preferencias del usuario
+
+| Preferencia | Efecto |
+|---|---|
+| **Transparente ↔ Tintado.** En Cuenta → Apariencia hay un slider que imita el ajuste de iOS y macOS; el navegador no puede leer el del sistema | `--glass-tint` va de 0 a 1 y sube la opacidad del relleno. Por defecto: 0 (transparente) |
+| `prefers-reduced-transparency` | El vidrio pasa a ser sólido (`--surface`) y sin blur |
+| `prefers-contrast: more` | Relleno casi sólido y borde visible de 1 px |
+
+### 6.4 Resto de la profundidad
+
+- **El contenido es sólido** (`--surface`), sin blur ni sombra; se separa de `--bg` por contraste.
+- **No hay barras sólidas arriba:** el large title queda libre y las acciones del encabezado flotan en cápsulas de vidrio. Cuando hay contenido debajo, se usa un **efecto de borde al hacer scroll** (un degradado desde `--bg`) en lugar de una línea divisoria.
+- **Sheets:** vidrio regular con un tinte más alto, porque tienen mucho texto.
 
 ## 7. Movimiento
 
@@ -124,7 +152,8 @@ Todo es interrumpible. Feedback en `pointerdown` (`scale(0.97)`). Con `prefers-r
 | Patrón | En depazo |
 |---|---|
 | **Barra de pestañas flotante** (≤ 5, de vidrio, abajo) | Para ti · Mapa · Favoritos · Búsquedas · Cuenta |
-| **Large title** que se contrae al hacer scroll | Encabezado de cada pestaña |
+| **Large title** sin barra y con acciones en cápsulas de vidrio flotantes | Encabezado de cada pestaña (filtros y orden en una cápsula) |
+| **Controles de vidrio clear sobre la foto**, con oscurecimiento del 35 % | Detalle de propiedad: atrás · (compartir + más) · favorito |
 | **Sheets con detents** (Vaul vía el Drawer de shadcn) | Detalle de propiedad sobre el mapa; filtros |
 | **Segmented control** | Lista / Mapa; orden por puntaje, precio o fecha |
 | **Swipe actions** en filas y tarjetas | Favorito, descartar (con deshacer) |

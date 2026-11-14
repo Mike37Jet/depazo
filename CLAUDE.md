@@ -102,7 +102,10 @@ Si las fuentes se contradicen, se aplica este orden de precedencia: **WCAG 2.2 A
 **Estilo:** limpio y elegante, al estilo Apple (HIG + Liquid Glass), con los tokens de `docs/design-system.md`.
 - Solo tokens: nada de hex, px de tipografía ni ms escritos a mano.
 - Un solo color de acento y un solo botón principal por pantalla.
-- Liquid Glass solo en la capa funcional (barra de pestañas, header, sheets).
+- Liquid Glass solo en la capa funcional, con controles agrupados en cápsulas:
+  - Variante **regular** para la barra de pestañas, los sheets y las acciones flotantes.
+  - Variante **clear** solo sobre fotos, con una capa oscura del 35 %.
+  - Se respetan la preferencia transparente/tintado y `prefers-reduced-transparency` (`docs/design-system.md` §6).
 - Fuente `system-ui` con la escala de Dynamic Type; íconos Lucide.
 - Sin logos ni marcas de Apple.
 - Mobile-first (375 px) y estados de carga, vacío y error en todas las pantallas.
