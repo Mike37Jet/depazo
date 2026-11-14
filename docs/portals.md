@@ -1,6 +1,6 @@
 # Verificación de portales (Quito)
 
-> Fecha: 2026-11-13. Decisión pendiente: [ADR 0016](adr/0016-fuentes-de-datos.md).
+> Fecha: 2026-11-13. Decisión: [ADR 0016](adr/0016-fuentes-de-datos.md) (aceptada): scraper para iCasas, BienesOnline y arriendos.ec; extensión asistida para Plusvalía, Marketplace y Properati; API para Mercado Libre.
 > Método: una petición por recurso (`robots.txt`, términos de uso, una página de listado), con un User-Agent identificable, sin evadir ninguna protección.
 
 ## 1. Resultado por portal

@@ -1,24 +1,26 @@
 # 0016. Fuentes de datos de anuncios
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada
 - **Fecha:** 2026-11-13
 
 ## Contexto
-La verificación de portales (`docs/portals.md`) mostró que los portales con más volumen en Quito bloquean el acceso automatizado (Plusvalía, Properati, Vive1 y Mitula, con Cloudflare o 403) o lo prohíben en sus términos (iCasas, Arrienda y Vende). OLX Ecuador cerró. Las fuentes permitidas tienen muy poco volumen (arriendos.ec). La API de Mercado Libre requiere OAuth y no se ha confirmado que permita búsquedas a terceros.
+La verificación de portales (`docs/portals.md`) mostró que Plusvalía, Properati, Vive1 y Mitula bloquean el acceso automatizado (Cloudflare o 403), que iCasas y Arrienda y Vende lo prohíben en sus términos y que OLX Ecuador cerró. El dueño del proyecto aclaró que depazo es **personal y experimental, sin fines comerciales**, y que sin datos la app no tiene valor.
 
-## Decisión propuesta
-Enfoque híbrido, por etapas:
-1. **MVP: depazo como organizador personal.** El usuario comparte un anuncio desde cualquier portal (Web Share Target de la PWA o pegando el enlace), confirma los datos clave, y depazo puntúa, compara y organiza.
-2. **Mercado Libre por API oficial**, si la prueba con una app registrada confirma que la búsqueda funciona.
-3. **Acuerdos de feed** con portales e inmobiliarias, y **oferta directa**, a medida que haya usuarios.
+## Decisión
+Tres vías, todas convergiendo en el mismo pipeline (cada una es un adaptador de `ListingSource`):
 
-Se mantiene la regla: no se hace scraping de sitios que lo bloquean o lo prohíben.
+| Vía | Fuentes | Cómo |
+|---|---|---|
+| **Scraper automático** | iCasas (primero), BienesOnline, arriendos.ec | Páginas públicas sin protección técnica, **aunque sus términos lo prohíban** (riesgo contractual asumido por el dueño). Frecuencia baja, respetando `robots.txt`, con un User-Agent identificable. Si un sitio bloquea, el adaptador se detiene |
+| **Extensión asistida** | Plusvalía (prioridad), Facebook Marketplace, Properati | Extensión de navegador: el usuario navega con su propia sesión y la extensión envía a su cuenta los anuncios que está viendo. Sin bots ni cuentas automatizadas |
+| **API oficial** | Mercado Libre | App registrada con OAuth, cuando el dueño cree la cuenta de desarrollador |
+
+**Límite no negociable:** no se evaden protecciones técnicas (desafíos de Cloudflare, CAPTCHAs, logins, bloqueos de IP, proxies rotativos, falsificación de huellas) ni se automatizan cuentas de terceros. Motivos: puede constituir acceso no consentido a un sistema informático (COIP, art. 234), en Marketplace implica recolectar datos personales, y en la práctica esos scrapers se rompen y provocan bloqueos de cuentas.
 
 ## Alternativas consideradas
-- **Scraping de los portales grandes evadiendo protecciones:** se descarta por razones legales y éticas, y porque contradice `docs/security.md`.
-- **Solo arriendos.ec y BienesOnline:** volumen insuficiente para que el producto tenga valor.
+- **Solo fuentes que permiten el scraping:** volumen insuficiente.
+- **Evadir las protecciones de los portales grandes:** se descarta por el límite anterior.
+- **Solo organizador manual (pegar enlaces):** se mantiene como respaldo, pero la extensión ofrece la misma cobertura con menos fricción.
 
 ## Consecuencias
-Cambia la propuesta de valor: de "buscar por ti" a "decidir mejor y no perder ninguna oportunidad", con búsqueda automática donde sea legal. El motor de puntaje, la arquitectura de adaptadores y las notificaciones siguen sirviendo.
-
-**Preguntas abiertas:** ¿se acepta el cambio de propuesta de valor? ¿Se registra una app de desarrollador en Mercado Libre para probar la API? ¿Se contacta a portales o inmobiliarias?
+Búsqueda automática real desde el día 1 con iCasas (unos 550 departamentos en Quito) y cobertura de los portales grandes a través de la extensión. Si iCasas cambia su HTML, solo se rompe su adaptador (con fixtures y tests). Queda un riesgo contractual con los sitios scrapeados, aceptado por ser un proyecto no comercial.
