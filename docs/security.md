@@ -55,6 +55,8 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 
 ### Ingesta (scrapers)
 - Si un sitio bloquea, el adaptador se detiene y registra el estado `blocked`.
+- Todas las fuentes respetan `robots.txt` **salvo `marketplace`** (ADR 0020), que pide tres páginas públicas sin sesión por ejecución. No usa cuentas, cookies, proxies ni navegadores disfrazados, y falla si la página pide iniciar sesión.
+- De Marketplace no se lee el bloque del vendedor, y los teléfonos escritos en el título (también con emojis) se eliminan antes de guardar.
 - **Allowlist de hosts por adaptador.** El cliente HTTP rechaza cualquier otro destino y no sigue redirecciones a otros dominios (anti-SSRF).
 - **Suscripciones push con allowlist.** El endpoint que manda el navegador solo se acepta si es `https`, sin puerto ni credenciales, y su host pertenece a un servicio de push conocido (FCM, Mozilla, Apple, Windows). El emisor lo vuelve a comprobar antes de cada envío y no sigue redirecciones. La clave privada VAPID vive solo en el Mac que corre la ingesta.
 - Timeouts, tamaño máximo de respuesta y reintentos con backoff.

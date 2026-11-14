@@ -71,7 +71,7 @@ Backend (desde `backend/`):
 | Lint y formato | `uv run ruff check --fix` · `uv run ruff format` |
 | Tipos | `uv run mypy src tests` |
 | Migraciones | `uv run alembic upgrade head` (lee `DEPAZO_DATABASE_URL`) |
-| Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json] [--save] [--alert-profile <perfil.json>]` |
+| Ingesta | `uv run depazo ingest --source <icasas|arriendos_ec|marketplace> --pages 1 [--output json] [--save] [--alert-profile <perfil.json>]` |
 | Alertas por email | `--alert-profile` (requiere `--save`) envía un resumen con los anuncios nuevos o con precio nuevo que superan el umbral. Variables: `RESEND_API_KEY`, `DEPAZO_ALERT_EMAIL` y, opcional, `DEPAZO_ALERT_FROM` |
 | Avisos push | `--notify-users` (requiere `--save`) avisa a cada usuario con dispositivos suscritos de los anuncios nuevos o con precio nuevo que superan su puntaje mínimo, sin contar sus descartados. Variables: `DEPAZO_VAPID_PRIVATE_KEY` (solo en el Mac) y, opcional, `DEPAZO_VAPID_SUBJECT`. La web necesita `VITE_VAPID_PUBLIC_KEY` |
 | Importar captura | `uv run depazo import <archivo.json> [--save]` |
@@ -149,11 +149,12 @@ Detalle en `docs/security.md`.
 - El service worker no cachea respuestas autenticadas.
 - Antes de cambios grandes en auth, API o ingesta, correr la skill `/security-review`.
 
-## Fuentes de datos y scraping (ADR 0016)
+## Fuentes de datos y scraping (ADR 0016 y 0020)
 
 Proyecto personal y experimental, sin fines comerciales.
 - **Automático (scraper):** sitios públicos sin protección técnica (iCasas, BienesOnline, arriendos.ec), **aunque sus términos lo prohíban**. Siempre con frecuencia baja, respetando `robots.txt` y con un User-Agent identificable. Si un sitio empieza a bloquear, el adaptador se detiene; no se escala.
-- **Asistido (extensión de navegador):** Plusvalía y Facebook Marketplace. El usuario navega con su propia sesión y la extensión captura los anuncios que él ve. No hay bots en esos sitios.
+- **Automático sin sesión (ADR 0020):** Facebook Marketplace. Tres peticiones por ejecución a páginas públicas, sin cuenta ni cookies. Es la **única fuente que no consulta `robots.txt`**; mantiene el User-Agent identificable y se detiene si Facebook bloquea o pide iniciar sesión. Nunca lee el bloque del vendedor y elimina los teléfonos del título.
+- **Asistido (extensión de navegador):** Plusvalía y Facebook Marketplace. El usuario navega con su propia sesión y la extensión captura los anuncios que él ve. No hay bots en Plusvalía ni se automatiza la cuenta de Facebook.
 - **Properati no se captura:** publica el mismo inventario que iCasas (Lifull Connect), que ya entra por el scraper.
 - **Oficial (API):** Mercado Libre, cuando se registre la app.
 - No se guardan datos personales de los anunciantes (nombre, teléfono, email, nombre de agente): solo la URL del anuncio (LOPDP Ecuador). Los fixtures de tests se anonimizan. Los usuarios pueden exportar sus datos y borrar su cuenta.

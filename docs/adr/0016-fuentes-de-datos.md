@@ -24,3 +24,6 @@ Búsqueda automática real desde el día 1 con iCasas (unos 550 departamentos en
 
 ## Actualización 2026-11-14
 Properati sale de la extensión. Properati Ecuador e iCasas son de Lifull Connect y publican el mismo inventario: los 30 anuncios de la primera página de Properati en Quito estaban en iCasas con el mismo identificador, y ambos portales muestran 553 departamentos. iCasas ya entra por el scraper, así que capturar Properati solo produciría duplicados.
+
+## Actualización 2026-11-14 (ADR 0020)
+Facebook Marketplace pasa a tener además un scraper automático sin sesión, que es la única fuente que no consulta `robots.txt`. El detalle y el porqué están en el [ADR 0020](0020-marketplace-por-scraper-sin-sesion.md). Plusvalía sigue solo por la extensión.
