@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from pydantic import SecretStr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -31,5 +33,16 @@ def with_async_driver(url: str) -> str:
     return url
 
 
+def unique_statement_name() -> str:
+    return f"__depazo_{uuid4().hex}__"
+
+
 def create_database_engine(url: str) -> AsyncEngine:
-    return create_async_engine(url, pool_pre_ping=True, connect_args={"statement_cache_size": 0})
+    return create_async_engine(
+        url,
+        pool_pre_ping=True,
+        connect_args={
+            "statement_cache_size": 0,
+            "prepared_statement_name_func": unique_statement_name,
+        },
+    )

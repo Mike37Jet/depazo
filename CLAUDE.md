@@ -36,7 +36,7 @@ PWA multiusuario que automatiza la búsqueda de departamentos en arriendo en **Q
 | Extensión (captura asistida) | Chrome MV3, TypeScript strict, esbuild, Zod (`zod/mini`), Biome, Vitest + happy-dom |
 | Datos / Auth | Supabase: Postgres + PostGIS, Supabase Auth (la API valida el JWT) |
 | Notificaciones | Web Push (VAPID, pywebpush), email con Resend |
-| Infra (free tiers) | Cloudflare Pages (web), Cloud Run (API), Sentry · sin CI ni cron en GitHub Actions (ADR 0017) |
+| Infra (free tiers) | Vercel: web estática y API en funciones de Python, con `/api` reescrito al proyecto de la API (ADR 0019) · Supabase Postgres por el pooler · Sentry · sin CI ni cron en GitHub Actions (ADR 0017) |
 
 ## Estructura (prevista)
 
