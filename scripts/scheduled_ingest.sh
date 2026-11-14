@@ -4,7 +4,16 @@ set -euo pipefail
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_directory="${DEPAZO_CONFIG_DIRECTORY:-$HOME/.config/depazo}"
+lock_file="$config_directory/scheduled-ingest.lock"
+max_lock_wait_seconds=900
 max_database_wait_seconds=60
+source_stopped_exit_code=3
+minutes_paused_after_a_block=1440
+
+if [[ "${DEPAZO_INGEST_LOCK_HELD:-}" != "1" ]]; then
+  DEPAZO_INGEST_LOCK_HELD=1 exec /usr/bin/lockf -t "$max_lock_wait_seconds" "$lock_file" \
+    /bin/bash "${BASH_SOURCE[0]}"
+fi
 
 log() {
   echo "$(date '+%Y-%m-%dT%H:%M:%S%z') $*"
@@ -50,6 +59,26 @@ ensure_database_is_ready() {
   exit 1
 }
 
+ingest_source() {
+  local source_name="$1"
+  shift
+  local block_marker="$config_directory/blocked-$source_name"
+  if [[ -n "$(find "$block_marker" -mmin "-$minutes_paused_after_a_block" 2>/dev/null)" ]]; then
+    log "skipping $source_name: it blocked or changed less than a day ago"
+    return
+  fi
+  log "ingesting $source_name"
+  local status=0
+  uv run --quiet depazo ingest --source "$source_name" --pages "${DEPAZO_SCHEDULED_PAGES:-20}" \
+    --save "$@" >/dev/null || status=$?
+  if [[ "$status" -eq "$source_stopped_exit_code" ]]; then
+    touch "$block_marker"
+    log "$source_name blocked or changed; paused for a day (delete $block_marker to resume)"
+  elif [[ "$status" -ne 0 ]]; then
+    exit "$status"
+  fi
+}
+
 run_ingest() {
   cd "$repository_root/backend"
   uv run --quiet alembic upgrade head
@@ -66,9 +95,7 @@ run_ingest() {
   fi
   local source_name
   for source_name in ${DEPAZO_SCHEDULED_SOURCES:-icasas arriendos_ec marketplace}; do
-    log "ingesting $source_name"
-    uv run --quiet depazo ingest --source "$source_name" --pages "${DEPAZO_SCHEDULED_PAGES:-20}" \
-      --save ${alert_options[@]+"${alert_options[@]}"} >/dev/null
+    ingest_source "$source_name" ${alert_options[@]+"${alert_options[@]}"}
   done
 }
 
