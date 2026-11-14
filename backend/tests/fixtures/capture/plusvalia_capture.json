@@ -1,0 +1,52 @@
+{
+  "format": "depazo.capture",
+  "version": 1,
+  "exportedAt": "2026-11-13T12:05:00.000Z",
+  "listings": [
+    {
+      "source": "plusvalia",
+      "externalId": "151448881",
+      "url": "https://www.plusvalia.com/propiedades/clasificado/alclapin-sector-republica-del-salvador.-departamento-amoblado-151448881.html",
+      "title": "Sector República del Salvador. Departamento Amoblado en Renta, 2d.95 m con Balcón",
+      "monthlyRentUsd": 1100,
+      "condoFeeUsd": 1,
+      "areaM2": 102,
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "neighborhood": "La Carolina",
+      "city": "Quito",
+      "imageUrl": "https://img10.naventcdn.com/avisos/9/01/51/44/88/81/360x266/1639505337.jpg",
+      "capturedAt": "2026-11-13T12:00:00.000Z"
+    },
+    {
+      "source": "plusvalia",
+      "externalId": "151196219",
+      "url": "https://www.plusvalia.com/propiedades/clasificado/alclapin-suite-de-renta-sector-la-carolina-151196219.html",
+      "title": "Suite de Renta - Sector La Carolina",
+      "monthlyRentUsd": 500,
+      "condoFeeUsd": null,
+      "areaM2": 5454,
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "neighborhood": "Centro Norte",
+      "city": "Quito",
+      "imageUrl": "https://img10.naventcdn.com/avisos/9/01/51/19/62/19/360x266/1633883794.jpg",
+      "capturedAt": "2026-11-13T12:00:00.000Z"
+    },
+    {
+      "source": "plusvalia",
+      "externalId": "151482292",
+      "url": "https://evil.test/propiedades/clasificado/x-151482292.html",
+      "title": "Anuncio con dominio ajeno",
+      "monthlyRentUsd": 1000,
+      "condoFeeUsd": 100,
+      "areaM2": 94,
+      "bedrooms": null,
+      "bathrooms": 2,
+      "neighborhood": "Cumbayá",
+      "city": "Quito",
+      "imageUrl": null,
+      "capturedAt": "2026-11-13T12:00:00.000Z"
+    }
+  ]
+}

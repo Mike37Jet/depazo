@@ -1,8 +1,10 @@
 from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from pathlib import Path
 
 from depazo.application.ports.listing_source import ListingSource
 from depazo.infrastructure.http.polite_client import PoliteHttpClient
+from depazo.infrastructure.sources.capture.capture_file import CapturedFileListingSource
 from depazo.infrastructure.sources.icasas import source as icasas
 
 
@@ -28,3 +30,8 @@ def open_listing_source(name: str) -> AbstractAsyncContextManager[ListingSource]
             f"unknown source '{name}', available: {', '.join(SOURCE_FACTORIES)}"
         )
     return factory()
+
+
+@asynccontextmanager
+async def open_capture_file_source(path: Path) -> AsyncIterator[ListingSource]:
+    yield CapturedFileListingSource(path)
