@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Self
 
@@ -20,6 +21,9 @@ class InMemoryListingRepository:
 
     async def record_price(self, listing: Listing, observed_at: datetime) -> None:
         self.price_history.append((listing, observed_at))
+
+    async def list_active(self) -> Sequence[Listing]:
+        return [listing for listing, _ in self.saved.values()]
 
 
 class InMemoryUnitOfWork:

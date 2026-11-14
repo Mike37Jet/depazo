@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Protocol, Self
 
@@ -10,6 +11,8 @@ class ListingRepository(Protocol):
     async def save(self, listing: Listing, seen_at: datetime) -> None: ...
 
     async def record_price(self, listing: Listing, observed_at: datetime) -> None: ...
+
+    async def list_active(self) -> Sequence[Listing]: ...
 
 
 class UnitOfWork(Protocol):

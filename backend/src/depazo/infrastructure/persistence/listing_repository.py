@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import datetime
 
 from sqlalchemy import select
@@ -44,6 +45,11 @@ class SqlAlchemyListingRepository:
             )
         )
         await self._session.flush()
+
+    async def list_active(self) -> Sequence[Listing]:
+        statement = select(ListingRecord).where(ListingRecord.status == ACTIVE_STATUS)
+        records = await self._session.scalars(statement)
+        return [_to_listing(record) for record in records]
 
     async def _find_record(self, source: str, external_id: str) -> ListingRecord | None:
         statement = select(ListingRecord).where(

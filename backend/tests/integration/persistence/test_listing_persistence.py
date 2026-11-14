@@ -98,3 +98,15 @@ async def test_enables_row_level_security_on_every_table(
     )
 
     assert tables_without_rls == 0
+
+
+async def test_lists_every_active_listing(session_factory: SessionFactory) -> None:
+    async with SqlAlchemyUnitOfWork(session_factory) as unit_of_work:
+        await unit_of_work.listings.save(a_listing(external_id="a"), FIRST_SEEN_AT)
+        await unit_of_work.listings.save(a_listing(external_id="b"), FIRST_SEEN_AT)
+        await unit_of_work.commit()
+
+    async with SqlAlchemyUnitOfWork(session_factory) as unit_of_work:
+        listings = await unit_of_work.listings.list_active()
+
+    assert sorted(listing.external_id for listing in listings) == ["a", "b"]
