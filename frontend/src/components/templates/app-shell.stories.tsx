@@ -5,7 +5,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { Heart, Search, SlidersHorizontal, Star, User } from "lucide-react";
+import { Download, Heart, Search, SlidersHorizontal, Star, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { describeFilters } from "../../format/search-profile";
 import { aMatch, SAVED_PROFILE } from "../../test/api-fixtures";
@@ -40,6 +40,9 @@ function MatchesScreen() {
           status="2 de 10 anuncios encajan con tu búsqueda"
           actions={
             <GlassSurface>
+              <button type="button" aria-label="Instalar depazo" className={GLASS_BUTTON_CLASSES}>
+                <Download aria-hidden="true" />
+              </button>
               <button type="button" aria-label="Editar búsqueda" className={GLASS_BUTTON_CLASSES}>
                 <SlidersHorizontal aria-hidden="true" />
               </button>

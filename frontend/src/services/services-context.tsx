@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext } from "react";
 import type { DepazoApi } from "./api-client";
+import type { AppInstaller } from "./app-installer";
 import type { AuthGateway } from "./auth-gateway";
 import type { PushGateway } from "./push-gateway";
 
@@ -7,6 +8,7 @@ export interface AppServices {
   auth: AuthGateway;
   api: DepazoApi;
   push: PushGateway;
+  installer: AppInstaller;
 }
 
 const ServicesContext = createContext<AppServices | null>(null);

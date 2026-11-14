@@ -2,7 +2,9 @@ import { screen, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { aMatch, aReport } from "../test/api-fixtures";
+import { FakeAppInstaller } from "../test/fake-app-installer";
 import { FakeAuthGateway, SIGNED_IN } from "../test/fake-auth-gateway";
+import { FakePushGateway } from "../test/fake-push-gateway";
 import { renderApp } from "../test/render-app";
 import { API_BASE_URL, server } from "../test/server";
 
@@ -129,5 +131,51 @@ describe("MatchesPage", () => {
     renderApp("/", new FakeAuthGateway(SIGNED_IN));
 
     expect(await screen.findByRole("button", { name: "Enviarme un código" })).toBeInTheDocument();
+  });
+
+  it("installs the app from the browser tab", async () => {
+    server.use(http.get(`${API_BASE_URL}/me/matches`, () => HttpResponse.json(aReport([]))));
+    const installer = new FakeAppInstaller("prompt");
+    const { user } = renderApp(
+      "/",
+      new FakeAuthGateway(SIGNED_IN),
+      new FakePushGateway(),
+      installer,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Instalar depazo" }));
+
+    expect(installer.installCount).toBe(1);
+    expect(screen.queryByRole("button", { name: "Instalar depazo" })).not.toBeInTheDocument();
+  });
+
+  it("explains how to add the app on an iPhone", async () => {
+    server.use(http.get(`${API_BASE_URL}/me/matches`, () => HttpResponse.json(aReport([]))));
+    const { user } = renderApp(
+      "/",
+      new FakeAuthGateway(SIGNED_IN),
+      new FakePushGateway(),
+      new FakeAppInstaller("manual"),
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Instalar depazo" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Agregar a inicio");
+    await user.click(screen.getByRole("button", { name: "Entendido" }));
+    expect(screen.queryByText(/Agregar a inicio/)).not.toBeInTheDocument();
+  });
+
+  it("hides the install button once the app is installed", async () => {
+    server.use(http.get(`${API_BASE_URL}/me/matches`, () => HttpResponse.json(aReport([]))));
+
+    renderApp(
+      "/",
+      new FakeAuthGateway(SIGNED_IN),
+      new FakePushGateway(),
+      new FakeAppInstaller("installed"),
+    );
+
+    expect(await screen.findByRole("link", { name: "Editar búsqueda" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Instalar depazo" })).not.toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import { App } from "./app";
 import { applyStoredAppearance } from "./hooks/use-appearance";
 import { createAppRouter } from "./routes/router";
 import { createDepazoApi } from "./services/api-client";
+import { BrowserAppInstaller } from "./services/browser-app-installer";
 import { BrowserPushGateway } from "./services/browser-push-gateway";
 import { readConfig } from "./services/config";
 import { SupabaseAuthGateway } from "./services/supabase-auth-gateway";
@@ -25,6 +26,7 @@ const services = {
   auth,
   api: createDepazoApi(config.apiBaseUrl, auth),
   push: new BrowserPushGateway(config.vapidPublicKey),
+  installer: new BrowserAppInstaller(),
 };
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: STALE_AFTER_MILLISECONDS, retry: 1 } },

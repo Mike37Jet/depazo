@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { SearchX, SlidersHorizontal } from "lucide-react";
+import { Download, SearchX, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
 import { Button, buttonClasses } from "../components/atoms/button";
 import { Chip } from "../components/atoms/chip";
 import { GLASS_BUTTON_CLASSES, GlassSurface } from "../components/atoms/glass-surface";
@@ -10,6 +11,7 @@ import { MatchList, MatchListSkeleton } from "../components/organisms/match-list
 import { TabPage } from "../components/templates/tab-page";
 import { describeReport, explainEmptyReport } from "../format/matches-report";
 import { describeFilters } from "../format/search-profile";
+import { useInstallApp } from "../hooks/use-install-app";
 import {
   type SavedToggle,
   useDiscardListing,
@@ -34,7 +36,19 @@ export function MatchesPage() {
   const discard = useDiscardListing();
   const restore = useRestoreListing();
   const undo = useUndoWindow<DiscardedListing>();
+  const installApp = useInstallApp();
+  const [isInstallHintVisible, setIsInstallHintVisible] = useState(false);
   const report = matches.data;
+  const canOfferInstall =
+    installApp.availability === "prompt" || installApp.availability === "manual";
+
+  const startInstall = () => {
+    if (installApp.availability === "manual") {
+      setIsInstallHintVisible(true);
+      return;
+    }
+    void installApp.install();
+  };
   const filters = profile.data ? describeFilters(profile.data) : [];
 
   const discardMatch = (match: Match) => {
@@ -59,6 +73,16 @@ export function MatchesPage() {
       status={report ? describeReport(report) : undefined}
       actions={
         <GlassSurface>
+          {canOfferInstall && (
+            <button
+              type="button"
+              aria-label="Instalar depazo"
+              onClick={startInstall}
+              className={GLASS_BUTTON_CLASSES}
+            >
+              <Download aria-hidden="true" />
+            </button>
+          )}
           <Link to="/busqueda" aria-label="Editar búsqueda" className={GLASS_BUTTON_CLASSES}>
             <SlidersHorizontal aria-hidden="true" />
           </Link>
@@ -112,6 +136,13 @@ export function MatchesPage() {
       )}
       {(toggleSaved.isError || discard.isError || restore.isError) && (
         <StatusMessage tone="error" message="No pudimos guardar el cambio. Inténtalo de nuevo." />
+      )}
+      {isInstallHintVisible && !undo.item && (
+        <Toast
+          message="Toca Compartir y luego «Agregar a inicio»"
+          actionLabel="Entendido"
+          onAction={() => setIsInstallHintVisible(false)}
+        />
       )}
       {undo.item && (
         <Toast
