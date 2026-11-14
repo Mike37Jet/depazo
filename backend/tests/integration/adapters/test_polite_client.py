@@ -222,3 +222,34 @@ async def test_waits_at_least_the_crawl_delay_between_requests(
 
     assert waits
     assert min(waits) > 29
+
+
+@respx.mock
+async def test_skips_robots_only_when_told_to() -> None:
+    robots = serve_robots(ALLOWED_HOST, "User-agent: *\nDisallow: /\n")
+    respx.get(PAGE_URL).mock(return_value=httpx.Response(200, text="ok"))
+
+    async with PoliteHttpClient(
+        frozenset({ALLOWED_HOST}), min_interval_seconds=0, should_respect_robots=False
+    ) as client:
+        text = await client.get_text(PAGE_URL)
+
+    assert text == "ok"
+    assert not robots.called
+
+
+@respx.mock
+async def test_sends_extra_headers_without_replacing_the_user_agent() -> None:
+    serve_robots(ALLOWED_HOST)
+    route = respx.get(PAGE_URL).mock(return_value=httpx.Response(200, text="ok"))
+
+    async with PoliteHttpClient(
+        frozenset({ALLOWED_HOST}),
+        min_interval_seconds=0,
+        extra_headers={"Sec-Fetch-Mode": "navigate", "User-Agent": "Mozilla/5.0"},
+    ) as client:
+        await client.get_text(PAGE_URL)
+
+    headers = route.calls.last.request.headers
+    assert headers["Sec-Fetch-Mode"] == "navigate"
+    assert headers["User-Agent"].startswith("depazo/")

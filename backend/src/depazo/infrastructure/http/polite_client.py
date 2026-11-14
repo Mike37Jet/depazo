@@ -1,5 +1,6 @@
 import asyncio
 import time
+from collections.abc import Mapping
 from typing import Protocol, Self
 from urllib.parse import urljoin, urlsplit
 
@@ -36,13 +37,20 @@ class PoliteHttpClient:
         allowed_hosts: frozenset[str],
         min_interval_seconds: float,
         timeout_seconds: float = 20.0,
+        should_respect_robots: bool = True,
+        extra_headers: Mapping[str, str] | None = None,
     ) -> None:
         self._allowed_hosts = allowed_hosts
         self._min_interval_seconds = min_interval_seconds
+        self._should_respect_robots = should_respect_robots
         self._last_request_at: float | None = None
         self._robots_by_host: dict[str, Protego] = {}
         self._client = httpx.AsyncClient(
-            headers={"User-Agent": USER_AGENT, "Accept-Language": "es-EC,es;q=0.9"},
+            headers={
+                **(extra_headers or {}),
+                "User-Agent": USER_AGENT,
+                "Accept-Language": "es-EC,es;q=0.9",
+            },
             timeout=timeout_seconds,
             follow_redirects=False,
         )
@@ -54,7 +62,9 @@ class PoliteHttpClient:
         await self._client.aclose()
 
     async def get_text(self, url: str) -> str:
-        response = await self._get_following_redirects(url, should_check_robots=True)
+        response = await self._get_following_redirects(
+            url, should_check_robots=self._should_respect_robots
+        )
         if response.status_code >= FIRST_ERROR_STATUS:
             raise SourceUnavailableError(f"{response.url} answered {response.status_code}")
         return self._read_body(response)
