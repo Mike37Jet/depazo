@@ -108,6 +108,13 @@ Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el c
 - **Criterios blandos ponderados**, cada uno normalizado entre 0 y 1: precio relativo al presupuesto, m², distancia a puntos de interés del usuario, características deseables y antigüedad del anuncio.
 - Función pura, determinista y con tests (*property-based* con Hypothesis).
 
+**Implementado (v1, `domain/scoring.py`):**
+- Costo mensual = arriendo + alícuota, si el perfil la incluye en el presupuesto. Si el precio es desconocido, el anuncio se descarta.
+- Filtros duros: presupuesto máximo y mínimo, habitaciones, baños y m² mínimos y sectores excluidos. Un dato faltante no descarta el anuncio.
+- Criterios blandos (pesos por defecto 0,5 / 0,25 / 0,25): **precio** (1 si cuesta hasta el 60 % del presupuesto, 0 si llega al tope), **m²** (0 en el mínimo, 1 al 150 % del mínimo) y **sector preferido** (1 o 0). Un dato desconocido vale 0,5, y un criterio que el perfil no define no cuenta.
+- Los sectores se comparan sin tildes, sin mayúsculas y sin espacios repetidos ("González Suárez" = "gonzalez suarez").
+- Pendiente: zona dibujada en el mapa (`ST_Within`), características obligatorias y deseables y antigüedad del anuncio.
+
 ## 8. Portales candidatos (Quito)
 
 **Verificado el 2026-11-13: ver [portals.md](portals.md) y el [ADR 0016](adr/0016-fuentes-de-datos.md) (propuesta).** Plusvalía, Properati, Vive1 y Mitula bloquean el acceso automatizado; iCasas y Arrienda y Vende lo prohíben en sus términos; OLX Ecuador cerró. Quedan como opciones: la API oficial de Mercado Libre (por confirmar), arriendos.ec (feed RSS, poco volumen) y el enfoque de **organizador personal** (el usuario comparte anuncios desde cualquier portal).

@@ -71,6 +71,7 @@ Backend (desde `backend/`):
 | Migraciones | `uv run alembic upgrade head` (lee `DEPAZO_DATABASE_URL`) |
 | Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json] [--save]` |
 | Importar captura | `uv run depazo import <archivo.json> [--save]` |
+| Ranking | `uv run depazo match --profile <perfil.json> [--limit 20] [--output json]` (ejemplo en `docs/examples/search_profile.json`) |
 
 Extensión (desde `extension/`): `pnpm install`, `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` (genera `dist/`, que se carga en `chrome://extensions` → "Cargar descomprimida").
 
