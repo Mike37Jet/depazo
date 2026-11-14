@@ -76,6 +76,7 @@ export function SearchProfileForm({
     inputMode: "decimal" | "numeric",
     placeholder: string,
     hint?: string,
+    isRequired = false,
   ) => {
     const inputId = `${formId}-${field}`;
     const errorId = `${inputId}-error`;
@@ -85,12 +86,14 @@ export function SearchProfileForm({
         htmlFor={inputId}
         error={errors[field]}
         errorId={errorId}
+        isRequired={isRequired}
         {...(hint ? { hint } : {})}
       >
         <Input
           id={inputId}
           inputMode={inputMode}
           placeholder={placeholder}
+          required={isRequired}
           value={values[field]}
           isInvalid={Boolean(errors[field])}
           aria-describedby={errors[field] ? errorId : undefined}
@@ -103,8 +106,11 @@ export function SearchProfileForm({
 
   return (
     <form noValidate onSubmit={submit} className="flex flex-col gap-6">
-      <InsetGroup title="Presupuesto" footer="La alícuota son los gastos de condominio.">
-        {textField("maxMonthlyCost", "Máximo al mes (USD)", "decimal", "900")}
+      <InsetGroup
+        title="Presupuesto"
+        footer="* Obligatorio. La alícuota son los gastos de condominio."
+      >
+        {textField("maxMonthlyCost", "Máximo al mes (USD)", "decimal", "900", undefined, true)}
         {textField("minMonthlyCost", "Mínimo al mes (USD)", "decimal", "Opcional")}
         <FieldRow label="Incluir alícuota" labelId={`${formId}-condo-label`}>
           <div className="flex justify-end">

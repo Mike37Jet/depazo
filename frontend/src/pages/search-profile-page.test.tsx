@@ -7,6 +7,18 @@ import { renderApp } from "../test/render-app";
 import { API_BASE_URL, server } from "../test/server";
 
 describe("SearchProfilePage", () => {
+  it("marks the maximum budget as the only required field", async () => {
+    server.use(
+      http.get(`${API_BASE_URL}/me/search-profile`, () => HttpResponse.json(SAVED_PROFILE)),
+    );
+    renderApp("/busqueda");
+
+    expect(await screen.findByLabelText("Máximo al mes (USD)")).toBeRequired();
+    expect(screen.getByLabelText("Mínimo al mes (USD)")).not.toBeRequired();
+    expect(screen.getByLabelText("Habitaciones mínimas")).not.toBeRequired();
+    expect(screen.getByText(/Obligatorio/)).toBeInTheDocument();
+  });
+
   it("loads the saved search and saves the edited one", async () => {
     let saved: SearchProfileInput | null = null;
     server.use(
