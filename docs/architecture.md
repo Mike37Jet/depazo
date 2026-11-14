@@ -40,7 +40,7 @@ flowchart LR
 | Componente | Tecnología | Responsabilidad |
 |---|---|---|
 | **Frontend (PWA)** | Vite + React + TypeScript, TanStack Router/Query, Tailwind + shadcn/ui, vite-plugin-pwa, MapLibre | Login, configurar búsquedas (dibujar zona en mapa), ver ranking, favoritos, suscripción a push |
-| **API** | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic | v1: leer y reemplazar el perfil de búsqueda del usuario (`/me/search-profile`) , listar sus matches (`/me/matches`) y los sectores con anuncios para autocompletar (`/neighborhoods`, requiere sesión). Pendiente: varios perfiles por usuario y suscripciones push |
+| **API** | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic | v1: leer y reemplazar el perfil de búsqueda del usuario (`/me/search-profile`) , listar sus matches (`/me/matches`, sin los descartados), guardar o descartar un anuncio (`/me/listings/{source}/{external_id}/reaction`), listar sus favoritos (`/me/saved-listings`) y los sectores con anuncios para autocompletar (`/neighborhoods`, requiere sesión). Pendiente: varios perfiles por usuario y suscripciones push |
 | **Ingesta (worker)** | Mismo paquete Python, CLI `depazo ingest` | Recolectar → normalizar → deduplicar → guardar → puntuar → notificar |
 | **Extensión de navegador** | Chrome MV3, TypeScript, esbuild, Zod (mini) | Captura los anuncios que el usuario ve en Plusvalía y Facebook Marketplace (Properati no hace falta: comparte inventario con iCasas). v1: los guarda en `chrome.storage.local` y los exporta a un JSON `depazo.capture` que se importa con `depazo import`. Cuando exista la API, los enviará a la cuenta del usuario |
 | **Base de datos** | Supabase Postgres + PostGIS | Datos de negocio + consultas geoespaciales |
@@ -96,7 +96,8 @@ Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el c
 - `listings`: `source`, `external_id`, `url`, precio, alícuota, habitaciones, baños, m², `location geography(Point)`, sector, características (`jsonb`), `first_seen_at`, `last_seen_at`, `status`, `property_id`.
 - `properties`: entidad canónica deduplicada.
 - `listing_price_history`
-- `matches`: `search_profile_id`, `property_id`, `score`, `score_breakdown jsonb`, `notified_at`, `user_state` (nuevo, visto, favorito o descartado).
+- `listing_reactions` (implementada): `user_id`, `listing_id`, `reaction` (`saved` o `discarded`) y `reacted_at`. Un anuncio descartado sale de los matches de ese usuario; uno guardado aparece en Favoritos aunque ya no cumpla los filtros. Se borra en cascada con el anuncio.
+- `matches`: `search_profile_id`, `property_id`, `score`, `score_breakdown jsonb`, `notified_at`. El puntaje se calcula al pedirlo; esta tabla llega con las alertas por usuario.
 - `push_subscriptions`, `ingest_runs`, `geocode_cache`.
 
 **No se guardan datos personales de los anunciantes** (teléfonos, nombres, emails): solo el enlace al anuncio original. Así se reduce el riesgo frente a la LOPDP de Ecuador.

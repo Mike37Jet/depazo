@@ -76,7 +76,7 @@ Backend (desde `backend/`):
 | Importar captura | `uv run depazo import <archivo.json> [--save]` |
 | Ingesta programada | LaunchAgent `com.depazo.ingest` cada 3 h → `scripts/scheduled_ingest.sh` desde el clon `~/.local/share/depazo/app` (ADR 0018). Config en `~/.config/depazo/{env,profile.json}`, log en `~/Library/Logs/depazo/ingest.log`. Ejecutar ya: `launchctl kickstart gui/$(id -u)/com.depazo.ingest` |
 | Ranking | `uv run depazo match --profile <perfil.json> [--limit 20] [--output json]` (ejemplo en `docs/examples/search_profile.json`) |
-| API | `uv run uvicorn depazo.bootstrap:create_api_app --factory` · endpoints `GET /health`, `GET`/`PUT /me/search-profile`, `GET /me/matches?limit=`, `GET /neighborhoods`. Variables: `DEPAZO_DATABASE_URL`, `DEPAZO_SUPABASE_URL` (origen https del proyecto), opcionales `DEPAZO_CORS_ORIGINS` (JSON), `DEPAZO_REQUESTS_PER_MINUTE` (60) y `DEPAZO_IS_OPENAPI_PUBLISHED` (`false`; `true` solo fuera de producción) |
+| API | `uv run uvicorn depazo.bootstrap:create_api_app --factory` · endpoints `GET /health`, `GET`/`PUT /me/search-profile`, `GET /me/matches?limit=`, `GET /me/saved-listings`, `PUT`/`DELETE /me/listings/{source}/{external_id}/reaction`, `GET /neighborhoods`. Variables: `DEPAZO_DATABASE_URL`, `DEPAZO_SUPABASE_URL` (origen https del proyecto), opcionales `DEPAZO_CORS_ORIGINS` (JSON), `DEPAZO_REQUESTS_PER_MINUTE` (60) y `DEPAZO_IS_OPENAPI_PUBLISHED` (`false`; `true` solo fuera de producción) |
 
 Extensión (desde `extension/`): `pnpm install`, `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` (genera `dist/`, que se carga en `chrome://extensions` → "Cargar descomprimida").
 

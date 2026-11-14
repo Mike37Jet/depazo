@@ -9,6 +9,8 @@ export type Match = components["schemas"]["MatchBody"];
 export type ListingSummary = components["schemas"]["ListingBody"];
 export type CriterionScore = components["schemas"]["CriterionBody"];
 export type Neighborhood = components["schemas"]["NeighborhoodBody"];
+export type Reaction = components["schemas"]["ReactionBody"]["reaction"];
+export type ListingReference = Pick<ListingSummary, "source" | "external_id">;
 
 export class ApiRequestError extends Error {
   override name = "ApiRequestError";
@@ -23,7 +25,12 @@ export interface DepazoApi {
   saveSearchProfile(profile: SearchProfileInput): Promise<SearchProfile>;
   listMatches(limit: number): Promise<Matches | null>;
   listNeighborhoods(): Promise<Neighborhood[]>;
+  listSavedListings(): Promise<Match[] | null>;
+  reactToListing(listing: ListingReference, reaction: Reaction): Promise<void>;
+  clearReaction(listing: ListingReference): Promise<void>;
 }
+
+const REACTION_PATH = "/me/listings/{source}/{external_id}/reaction";
 
 const NOT_FOUND = 404;
 const UNAUTHORIZED = 401;
@@ -83,6 +90,33 @@ export function createDepazoApi(baseUrl: string, auth: AuthGateway): DepazoApi {
       }
       return data.neighborhoods;
     },
+    async listSavedListings() {
+      const { data, response } = await client.GET("/me/saved-listings");
+      if (response.status === NOT_FOUND) {
+        return null;
+      }
+      if (!data) {
+        throw new ApiRequestError(response.status);
+      }
+      return data.matches;
+    },
+    async reactToListing(listing, reaction) {
+      const { response } = await client.PUT(REACTION_PATH, {
+        params: { path: toPathParams(listing) },
+        body: { reaction },
+      });
+      if (!response.ok) {
+        throw new ApiRequestError(response.status);
+      }
+    },
+    async clearReaction(listing) {
+      const { response } = await client.DELETE(REACTION_PATH, {
+        params: { path: toPathParams(listing) },
+      });
+      if (!response.ok) {
+        throw new ApiRequestError(response.status);
+      }
+    },
   };
 }
 
@@ -91,4 +125,8 @@ function absoluteUrl(baseUrl: string): string {
     /\/$/,
     "",
   );
+}
+
+function toPathParams(listing: ListingReference) {
+  return { source: listing.source, external_id: listing.external_id };
 }

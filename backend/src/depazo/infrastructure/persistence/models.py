@@ -81,3 +81,14 @@ class SearchProfileRecord(Base):
     neighborhood_weight: Mapped[Decimal] = mapped_column(WEIGHT)
     min_score: Mapped[int] = mapped_column(SmallInteger)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ListingReactionRecord(Base):
+    __tablename__ = "listing_reactions"
+
+    user_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    listing_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("listings.id", ondelete="CASCADE"), primary_key=True
+    )
+    reaction: Mapped[str] = mapped_column(String(20))
+    reacted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

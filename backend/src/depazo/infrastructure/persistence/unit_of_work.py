@@ -2,6 +2,9 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from depazo.infrastructure.persistence.listing_reaction_repository import (
+    SqlAlchemyListingReactionRepository,
+)
 from depazo.infrastructure.persistence.listing_repository import SqlAlchemyListingRepository
 from depazo.infrastructure.persistence.search_profile_repository import (
     SqlAlchemySearchProfileRepository,
@@ -16,6 +19,10 @@ class SqlAlchemyUnitOfWork:
     @property
     def listings(self) -> SqlAlchemyListingRepository:
         return SqlAlchemyListingRepository(self._active_session())
+
+    @property
+    def listing_reactions(self) -> SqlAlchemyListingReactionRepository:
+        return SqlAlchemyListingReactionRepository(self._active_session())
 
     @property
     def search_profiles(self) -> SqlAlchemySearchProfileRepository:

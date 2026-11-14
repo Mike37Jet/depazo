@@ -15,6 +15,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/me/listings/{source}/{external_id}/reaction": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["react_to_listing_me_listings__source___external_id__reaction_put"];
+    post?: never;
+    delete: operations["clear_listing_reaction_me_listings__source___external_id__reaction_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/me/matches": {
     parameters: {
       query?: never;
@@ -23,6 +39,22 @@ export interface paths {
       cookie?: never;
     };
     get: operations["list_matches_me_matches_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/me/saved-listings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["list_saved_listings_me_saved_listings_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -94,10 +126,13 @@ export interface components {
     };
     MatchBody: {
       breakdown: components["schemas"]["CriterionBody"][];
+      is_saved: boolean;
       listing: components["schemas"]["ListingBody"];
+      passed_hard_filters: boolean;
       score: number;
     };
     MatchesBody: {
+      discarded_count: number;
       evaluated_count: number;
       match_count: number;
       matches: components["schemas"]["MatchBody"][];
@@ -109,6 +144,13 @@ export interface components {
     };
     NeighborhoodsBody: {
       neighborhoods: components["schemas"]["NeighborhoodBody"][];
+    };
+    Reaction: "saved" | "discarded";
+    ReactionBody: {
+      reaction: components["schemas"]["Reaction"];
+    };
+    SavedListingsBody: {
+      matches: components["schemas"]["MatchBody"][];
     };
     "SearchProfileBody-Input": {
       excluded_neighborhoods: string[];
@@ -181,6 +223,66 @@ export interface operations {
       };
     };
   };
+  react_to_listing_me_listings__source___external_id__reaction_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        source: string;
+        external_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReactionBody"];
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_listing_reaction_me_listings__source___external_id__reaction_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        source: string;
+        external_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_matches_me_matches_get: {
     parameters: {
       query?: {
@@ -206,6 +308,25 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_saved_listings_me_saved_listings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SavedListingsBody"];
         };
       };
     };
