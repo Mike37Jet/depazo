@@ -53,6 +53,10 @@ export const chromeWatchTabs: WatchTabs = {
     await chrome.tabs.update(tabId, { autoDiscardable: false });
     await chrome.tabs.reload(tabId);
   },
+
+  async show(tabId: number, url: string): Promise<void> {
+    await chrome.tabs.update(tabId, { url, autoDiscardable: false });
+  },
 };
 
 export const chromeWatchAlarms: WatchAlarms = {

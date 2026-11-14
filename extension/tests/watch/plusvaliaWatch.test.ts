@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { captureExportSchema } from "../../src/capture/capturedListing";
 import type { DeliveryOutcome } from "../../src/watch/nativeDelivery";
-import { WATCH_URL } from "../../src/watch/watchSchedule";
+import { catchUpPageUrl, LAST_CATCH_UP_PAGE, WATCH_URL } from "../../src/watch/watchSchedule";
 import {
   aCapturedListing,
   aPageReport,
@@ -639,5 +639,131 @@ describe("delivery", () => {
 
     expect(browser.sentCaptures).toEqual([]);
     expect(browser.state.lastDeliveryAttemptAt).toBeNull();
+  });
+});
+
+describe("catch-up with earlier listings", () => {
+  it("opens one earlier page after the newest listings were read", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+
+    expect(browser.shownUrls).toEqual([catchUpPageUrl(2)]);
+    expect(browser.state.isAwaitingCatchUpPage).toBe(true);
+    expect(browser.state.awaitingReportSince).toBe(MIDMORNING.toISOString());
+    expect(browser.reportDeadlines).toHaveLength(2);
+  });
+
+  it("moves on to the next page once the earlier page was read", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+
+    await watch.acceptPageReport(
+      aPageReport([aCapturedListing({ externalId: "2" })]),
+      WATCH_TAB_ID,
+      "earlier",
+    );
+
+    expect(browser.state.nextCatchUpPage).toBe(3);
+    expect(browser.state.isAwaitingCatchUpPage).toBe(false);
+    expect(browser.state.awaitingReportSince).toBeNull();
+    expect(browser.shownUrls).toEqual([catchUpPageUrl(2)]);
+    expect(browser.pendingListings.map((listing) => listing.externalId)).toEqual(["1", "2"]);
+  });
+
+  it("opens only one earlier page per cycle however many reports the page sends", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "earlier");
+
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "earlier");
+
+    expect(browser.shownUrls).toEqual([catchUpPageUrl(2)]);
+    expect(browser.state.nextCatchUpPage).toBe(3);
+  });
+
+  it("ignores a late report of the newest page while the earlier page loads", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+
+    const isAccepted = await watch.acceptPageReport(
+      aPageReport([aCapturedListing()]),
+      WATCH_TAB_ID,
+      "newest",
+    );
+
+    expect(isAccepted).toBe(false);
+    expect(browser.state.nextCatchUpPage).toBe(2);
+    expect(browser.state.isAwaitingCatchUpPage).toBe(true);
+  });
+
+  it("returns to the newest listings on the next cycle", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "earlier");
+    browser.advanceSeconds(20 * 60);
+
+    await watch.runCycle();
+
+    expect(browser.shownUrls).toEqual([catchUpPageUrl(2), WATCH_URL]);
+    expect(browser.state.isAwaitingCatchUpPage).toBe(false);
+  });
+
+  it("stops for good when the earlier page never reports", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+    browser.advanceSeconds(60);
+
+    await watch.enforceReportDeadline();
+
+    expect(browser.state.attentionReason).toBe("noReport");
+    expect(browser.state.isAwaitingCatchUpPage).toBe(false);
+    expect(browser.state.nextCatchUpPage).toBe(2);
+    expect(browser.isBadgeShown).toBe(true);
+  });
+
+  it("opens no earlier page once the last one was read", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: LAST_CATCH_UP_PAGE + 1 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+
+    expect(browser.shownUrls).toEqual([]);
+    expect(browser.state.awaitingReportSince).toBeNull();
+  });
+
+  it("opens no earlier page while the computer is offline", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+    const watch = browser.createWatch();
+    await watch.runCycle();
+    browser.isOnline = false;
+
+    await watch.acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "newest");
+
+    expect(browser.shownUrls).toEqual([]);
+    expect(browser.state.nextCatchUpPage).toBe(2);
+  });
+
+  it("opens no earlier page for a page the owner browsed by hand", async () => {
+    const browser = new FakeBrowser(watchingState({ nextCatchUpPage: 2 }));
+
+    await browser
+      .createWatch()
+      .acceptPageReport(aPageReport([aCapturedListing()]), WATCH_TAB_ID, "byHand");
+
+    expect(browser.shownUrls).toEqual([]);
   });
 });

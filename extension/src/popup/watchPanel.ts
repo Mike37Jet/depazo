@@ -1,5 +1,6 @@
 import type { DeliveryErrorCode, DeliveryOutcome } from "../watch/nativeDelivery";
 import type { WatchCommand } from "../watch/watchMessages";
+import { hasCatchUpPagesLeft, LAST_CATCH_UP_PAGE } from "../watch/watchSchedule";
 import { needsAttention, type WatchState } from "../watch/watchState";
 
 export interface WatchPanelPorts {
@@ -52,6 +53,12 @@ export function describeDeliveryOutcome(outcome: DeliveryOutcome): string {
   }
 }
 
+export function describeCatchUp(state: WatchState): string {
+  return hasCatchUpPagesLeft(state)
+    ? `Poniéndose al día con anuncios anteriores: página ${state.nextCatchUpPage} de ${LAST_CATCH_UP_PAGE}.`
+    : `Anuncios anteriores al día: se recorrieron las primeras ${LAST_CATCH_UP_PAGE} páginas.`;
+}
+
 export function describeLastCheck(state: WatchState, formatDate: (date: Date) => string): string {
   return state.lastCheckAt === null
     ? NEVER_CHECKED
@@ -72,6 +79,7 @@ export function describeLastDelivery(
 export function mountWatchPanel(root: ParentNode, ports: WatchPanelPorts): WatchPanel {
   const watchSwitch = requiredElement<HTMLInputElement>(root, "#watch-switch");
   const status = requiredElement<HTMLElement>(root, "#watch-status");
+  const catchUp = requiredElement<HTMLElement>(root, "#watch-catch-up");
   const lastCheck = requiredElement<HTMLElement>(root, "#watch-last-check");
   const lastDelivery = requiredElement<HTMLElement>(root, "#watch-last-delivery");
   const failure = requiredElement<HTMLElement>(root, "#watch-failure");
@@ -82,6 +90,8 @@ export function mountWatchPanel(root: ParentNode, ports: WatchPanelPorts): Watch
     watchSwitch.checked = state.isEnabled;
     watchSwitch.disabled = false;
     status.textContent = describeWatchStatus(state);
+    catchUp.textContent = describeCatchUp(state);
+    catchUp.hidden = !state.isEnabled;
     lastCheck.textContent = describeLastCheck(state, ports.formatDate);
     lastDelivery.textContent = describeLastDelivery(state, ports.formatDate);
     attention.hidden = !(state.isEnabled && needsAttention(state));

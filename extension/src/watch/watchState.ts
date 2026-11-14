@@ -10,6 +10,8 @@ export const watchStateSchema = z.strictObject({
   awaitingReportSince: z.nullable(z.iso.datetime()),
   lastReloadAt: z.nullable(z.iso.datetime()),
   lastReportDocumentId: z.nullable(z.string()),
+  nextCatchUpPage: z._default(z.int().check(z.minimum(2)), 2),
+  isAwaitingCatchUpPage: z._default(z.boolean(), false),
   lastCheckAt: z.nullable(z.iso.datetime()),
   lastDeliveryAttemptAt: z.nullable(z.iso.datetime()),
   lastDelivery: z.nullable(
@@ -26,6 +28,8 @@ export const DEFAULT_WATCH_STATE: WatchState = {
   awaitingReportSince: null,
   lastReloadAt: null,
   lastReportDocumentId: null,
+  nextCatchUpPage: 2,
+  isAwaitingCatchUpPage: false,
   lastCheckAt: null,
   lastDeliveryAttemptAt: null,
   lastDelivery: null,

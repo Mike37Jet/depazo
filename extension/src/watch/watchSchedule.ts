@@ -7,6 +7,8 @@ export const WATCH_PERIOD_MINUTES = 20;
 export const ACTIVE_FROM_HOUR = 7;
 export const ACTIVE_UNTIL_HOUR = 22;
 export const REPORT_DEADLINE_MILLISECONDS = 60 * 1000;
+export const FIRST_CATCH_UP_PAGE = 2;
+export const LAST_CATCH_UP_PAGE = 20;
 
 export type WatchCycleDecision =
   | "off"
@@ -24,6 +26,14 @@ export function isWithinActiveHours(now: Date): boolean {
 
 export function isWatchTabUrl(url: string | undefined): boolean {
   return url?.startsWith(WATCH_TAB_URL_PREFIX) ?? false;
+}
+
+export function catchUpPageUrl(page: number): string {
+  return `${WATCH_URL}&page=${page}`;
+}
+
+export function hasCatchUpPagesLeft(state: WatchState): boolean {
+  return state.nextCatchUpPage <= LAST_CATCH_UP_PAGE;
 }
 
 export function reportDeadline(awaitingReportSince: string): Date {

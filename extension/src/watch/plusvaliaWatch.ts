@@ -11,7 +11,9 @@ import type { DeliveryOutcome } from "./nativeDelivery";
 import { createSerialQueue } from "./serialQueue";
 import type { PageReport } from "./watchMessages";
 import {
+  catchUpPageUrl,
   decideWatchCycle,
+  hasCatchUpPagesLeft,
   isReportOverdue,
   isWatchTabUrl,
   reportDeadline,
@@ -31,6 +33,7 @@ export interface WatchTabs {
   hasWindow(): Promise<boolean>;
   open(url: string): Promise<number>;
   reload(tabId: number): Promise<void>;
+  show(tabId: number, url: string): Promise<void>;
 }
 
 export interface WatchStore {
@@ -96,36 +99,49 @@ export function createPlusvaliaWatch(ports: WatchPorts): PlusvaliaWatch {
       ...state,
       attentionReason: "noReport",
       awaitingReportSince: null,
+      isAwaitingCatchUpPage: false,
     };
     await store.storeState(stopped);
     await showBadgeFor(stopped);
   }
 
-  async function usableWatchTabId(state: WatchState): Promise<number | null> {
+  async function usableWatchTab(state: WatchState): Promise<WatchTab | null> {
     const stored = state.tabId === null ? null : await tabs.find(state.tabId);
     if (stored !== null && isWatchTabUrl(stored.url)) {
-      return stored.id;
+      return stored;
     }
     const existing = await tabs.findExisting();
-    return existing !== null && isWatchTabUrl(existing.url) ? existing.id : null;
+    return existing !== null && isWatchTabUrl(existing.url) ? existing : null;
+  }
+
+  async function showNewestListings(tab: WatchTab): Promise<void> {
+    await (tab.url === WATCH_URL ? tabs.reload(tab.id) : tabs.show(tab.id, WATCH_URL));
+  }
+
+  async function showCatchUpPage(state: WatchState, tabId: number): Promise<void> {
+    const awaitingReportSince = ports.now().toISOString();
+    await store.storeState({ ...state, awaitingReportSince, isAwaitingCatchUpPage: true });
+    await alarms.scheduleReportDeadline(reportDeadline(awaitingReportSince));
+    await tabs.show(tabId, catchUpPageUrl(state.nextCatchUpPage));
   }
 
   async function reloadWatchTab(state: WatchState, now: Date): Promise<boolean> {
-    const existingTabId = await usableWatchTabId(state);
-    if (existingTabId === null && !(await tabs.hasWindow())) {
+    const existingTab = await usableWatchTab(state);
+    if (existingTab === null && !(await tabs.hasWindow())) {
       return false;
     }
-    const tabId = existingTabId ?? (await tabs.open(WATCH_URL));
+    const tabId = existingTab?.id ?? (await tabs.open(WATCH_URL));
     const awaitingReportSince = now.toISOString();
     await store.storeState({
       ...state,
       tabId,
       awaitingReportSince,
+      isAwaitingCatchUpPage: false,
       lastReloadAt: awaitingReportSince,
     });
     await alarms.scheduleReportDeadline(reportDeadline(awaitingReportSince));
-    if (existingTabId !== null) {
-      await tabs.reload(existingTabId);
+    if (existingTab !== null) {
+      await showNewestListings(existingTab);
     }
     return true;
   }
@@ -240,12 +256,17 @@ export function createPlusvaliaWatch(ports: WatchPorts): PlusvaliaWatch {
         if (isFromDocumentBeforeReload || report.listings.length === 0) {
           return false;
         }
-        await store.storeState({
+        const reported: WatchState = {
           ...state,
           awaitingReportSince: null,
+          isAwaitingCatchUpPage: false,
+          nextCatchUpPage: state.isAwaitingCatchUpPage
+            ? state.nextCatchUpPage + 1
+            : state.nextCatchUpPage,
           lastReportDocumentId: documentId ?? state.lastReportDocumentId,
           lastCheckAt: ports.now().toISOString(),
-        });
+        };
+        await store.storeState(reported);
         await store.storePendingListings(
           addPending(
             await store.loadPendingListings(),
@@ -253,6 +274,11 @@ export function createPlusvaliaWatch(ports: WatchPorts): PlusvaliaWatch {
             await store.loadDeliveredKeys(),
           ),
         );
+        const isFirstReportOfTheCycle =
+          state.awaitingReportSince !== null && !state.isAwaitingCatchUpPage;
+        if (isFirstReportOfTheCycle && hasCatchUpPagesLeft(reported) && ports.isOnline()) {
+          await showCatchUpPage(reported, tabId);
+        }
         return true;
       }),
 
@@ -265,6 +291,7 @@ export function createPlusvaliaWatch(ports: WatchPorts): PlusvaliaWatch {
           ...previous,
           isEnabled,
           awaitingReportSince: isEnabled ? previous.awaitingReportSince : null,
+          isAwaitingCatchUpPage: isEnabled && previous.isAwaitingCatchUpPage,
         };
         await store.storeState(state);
         await showBadgeFor(state);
@@ -276,6 +303,7 @@ export function createPlusvaliaWatch(ports: WatchPorts): PlusvaliaWatch {
           ...(await store.loadState()),
           attentionReason: null,
           awaitingReportSince: null,
+          isAwaitingCatchUpPage: false,
         };
         await store.storeState(state);
         await showBadgeFor(state);

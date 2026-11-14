@@ -114,6 +114,25 @@ describe("watch panel", () => {
     );
   });
 
+  it("shows how far the catch-up with earlier listings has gone", async () => {
+    const [page] = await mountedPopup(watchingState({ nextCatchUpPage: 7 }));
+
+    const catchUp = elementIn(page, "#watch-catch-up");
+
+    expect(catchUp.hidden).toBe(false);
+    expect(catchUp.textContent).toBe("Poniéndose al día con anuncios anteriores: página 7 de 20.");
+  });
+
+  it("says so when the catch-up is finished and hides it while off", async () => {
+    const [watching] = await mountedPopup(watchingState());
+    const [off] = await mountedPopup(aWatchState());
+
+    expect(elementIn(watching, "#watch-catch-up").textContent).toBe(
+      "Anuncios anteriores al día: se recorrieron las primeras 20 páginas.",
+    );
+    expect(elementIn(off, "#watch-catch-up").hidden).toBe(true);
+  });
+
   it("says so when nothing was checked or delivered yet", async () => {
     const [page] = await mountedPopup(watchingState());
 

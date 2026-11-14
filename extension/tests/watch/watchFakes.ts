@@ -2,7 +2,7 @@ import type { CapturedListing, CaptureExport } from "../../src/capture/capturedL
 import type { DeliveryOutcome } from "../../src/watch/nativeDelivery";
 import { createPlusvaliaWatch, type PlusvaliaWatch } from "../../src/watch/plusvaliaWatch";
 import { buildPageReport, type PageReport } from "../../src/watch/watchMessages";
-import { WATCH_URL } from "../../src/watch/watchSchedule";
+import { LAST_CATCH_UP_PAGE, WATCH_URL } from "../../src/watch/watchSchedule";
 import { DEFAULT_WATCH_STATE, type WatchState } from "../../src/watch/watchState";
 
 export const WATCH_TAB_ID = 7;
@@ -38,7 +38,7 @@ export function aPageReport(listings: readonly CapturedListing[]): PageReport {
 }
 
 export function aWatchState(overrides: Partial<WatchState> = {}): WatchState {
-  return { ...DEFAULT_WATCH_STATE, ...overrides };
+  return { ...DEFAULT_WATCH_STATE, nextCatchUpPage: LAST_CATCH_UP_PAGE + 1, ...overrides };
 }
 
 export function watchingState(overrides: Partial<WatchState> = {}): WatchState {
@@ -61,6 +61,7 @@ export class FakeBrowser {
   isOnline = true;
   nextTabId = 100;
   reloadedTabIds: number[] = [];
+  shownUrls: string[] = [];
   openedUrls: string[] = [];
   reportDeadlines: Date[] = [];
   deliveryAlarms: Date[] = [];
@@ -120,6 +121,10 @@ export class FakeBrowser {
         },
         reload: async (tabId) => {
           this.reloadedTabIds.push(tabId);
+        },
+        show: async (tabId, url) => {
+          this.tabUrls.set(tabId, url);
+          this.shownUrls.push(url);
         },
       },
       alarms: {

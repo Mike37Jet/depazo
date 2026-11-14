@@ -29,6 +29,18 @@ describe("createWatchStore", () => {
     expect(DEFAULT_WATCH_STATE.isEnabled).toBe(false);
   });
 
+  it("keeps watching on for a state stored before the catch-up existed", async () => {
+    const { nextCatchUpPage, isAwaitingCatchUpPage, ...storedBeforeCatchUp } = watchingState();
+    const store = createWatchStore(inMemoryArea({ [WATCH_STATE_KEY]: storedBeforeCatchUp }));
+
+    const state = await store.loadState();
+
+    expect(state.isEnabled).toBe(true);
+    expect(state.nextCatchUpPage).toBe(2);
+    expect(state.isAwaitingCatchUpPage).toBe(false);
+    expect([nextCatchUpPage, isAwaitingCatchUpPage]).toEqual([21, false]);
+  });
+
   it("keeps the state, the last delivery and the stop across reads", async () => {
     const store = createWatchStore(inMemoryArea());
     const state = watchingState({
