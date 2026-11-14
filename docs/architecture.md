@@ -112,7 +112,7 @@ Se ejecuta cada hora con un cron de GitHub Actions; cada portal corre como un jo
 
 **Verificado el 2026-11-13: ver [portals.md](portals.md) y el [ADR 0016](adr/0016-fuentes-de-datos.md) (propuesta).** Plusvalía, Properati, Vive1 y Mitula bloquean el acceso automatizado; iCasas y Arrienda y Vende lo prohíben en sus términos; OLX Ecuador cerró. Quedan como opciones: la API oficial de Mercado Libre (por confirmar), arriendos.ec (feed RSS, poco volumen) y el enfoque de **organizador personal** (el usuario comparte anuncios desde cualquier portal).
 
-**Política:** si un portal prohíbe el scraping o bloquea activamente el acceso automatizado, **no se evade**. Se busca un acuerdo o API oficial, o se descarta ese portal.
+**Política:** la estrategia por portal está en el [ADR 0016](adr/0016-fuentes-de-datos.md).
 
 ## 9. Free tiers y riesgos
 

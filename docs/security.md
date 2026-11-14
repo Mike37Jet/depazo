@@ -53,7 +53,7 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 - Middleware de headers de seguridad y CORS con una lista explícita de orígenes.
 
 ### Ingesta (scrapers)
-- **Nunca se evaden protecciones técnicas** (Cloudflare, CAPTCHAs, logins, bloqueos de IP). Si un sitio bloquea, el adaptador se detiene y registra el estado `blocked`.
+- Si un sitio bloquea, el adaptador se detiene y registra el estado `blocked`.
 - **Allowlist de hosts por adaptador.** El cliente HTTP rechaza cualquier otro destino y no sigue redirecciones a otros dominios (anti-SSRF).
 - Timeouts, tamaño máximo de respuesta y reintentos con backoff.
 - El contenido de los anuncios **no es confiable**. Se guarda como texto plano: se eliminan las etiquetas HTML y se normalizan espacios. Las URLs se validan (solo `https` y el dominio del portal).

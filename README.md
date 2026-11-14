@@ -23,7 +23,7 @@ Proyecto personal y experimental, sin fines comerciales ([ADR 0016](docs/adr/001
 
 - **Scraper** para sitios públicos sin protección técnica (iCasas), con baja frecuencia, `robots.txt` respetado y un User-Agent identificable. Si un sitio bloquea, el colector se detiene.
 - **Extensión de navegador** para Plusvalía y Facebook Marketplace: guarda los anuncios que tú ves mientras navegas con tu propia sesión. No hay bots en esos sitios.
-- Nunca se evaden protecciones técnicas ni se guardan datos personales de los anunciantes.
+- No se guardan datos personales de los anunciantes.
 
 ## Probar la extensión
 

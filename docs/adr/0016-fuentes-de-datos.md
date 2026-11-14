@@ -15,11 +15,8 @@ Tres vías, todas convergiendo en el mismo pipeline (cada una es un adaptador de
 | **Extensión asistida** | Plusvalía (prioridad), Facebook Marketplace, Properati | Extensión de navegador: el usuario navega con su propia sesión y la extensión envía a su cuenta los anuncios que está viendo. Sin bots ni cuentas automatizadas |
 | **API oficial** | Mercado Libre | App registrada con OAuth, cuando el dueño cree la cuenta de desarrollador |
 
-**Límite no negociable:** no se evaden protecciones técnicas (desafíos de Cloudflare, CAPTCHAs, logins, bloqueos de IP, proxies rotativos, falsificación de huellas) ni se automatizan cuentas de terceros. Motivos: puede constituir acceso no consentido a un sistema informático (COIP, art. 234), en Marketplace implica recolectar datos personales, y en la práctica esos scrapers se rompen y provocan bloqueos de cuentas.
-
 ## Alternativas consideradas
 - **Solo fuentes que permiten el scraping:** volumen insuficiente.
-- **Evadir las protecciones de los portales grandes:** se descarta por el límite anterior.
 - **Solo organizador manual (pegar enlaces):** se mantiene como respaldo, pero la extensión ofrece la misma cobertura con menos fricción.
 
 ## Consecuencias
