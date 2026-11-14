@@ -25,6 +25,7 @@
 | **I**nformation disclosure (fuga de información) | Filtrar la zona de búsqueda de un usuario, secretos o trazas internas | Errores genéricos al cliente; secretos solo en el servidor; `/docs` de la API desactivado en producción; Sentry con limpieza de datos sensibles |
 | **D**enegación de servicio | Que alguien inunde la API o agote los free tiers | Rate limiting por usuario e IP; límites de tamaño de request y de número de perfiles por usuario; funciones serverless de Vercel con tope de duración |
 | **E**levación de privilegios | Usar la clave de servicio de Supabase desde el frontend; ejecutar código desde el HTML de un anuncio | La clave de servicio nunca sale del backend; el contenido de los anuncios se trata como no confiable (ver §4) |
+| **T**ampering por el canal de captura | Inyectar anuncios falsos o enlaces a otro dominio, y con ellos avisos push, por el host local que recibe las capturas de la extensión (ADR 0021) | Chrome solo lanza el host para la extensión de `allowed_origins`; el service worker valida el remitente; el host valida como si el emisor fuera hostil: trama de máximo 256 KiB, máximo 100 anuncios, solo `source` `plusvalia`, host exacto en las URLs y errores de un conjunto cerrado (ver §4) |
 
 ## 3. OWASP Top 10:2025 aplicado
 
@@ -55,20 +56,26 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 
 ### Ingesta (scrapers)
 - Si un sitio bloquea, el adaptador se detiene y registra el estado `blocked`.
-- Todas las fuentes respetan `robots.txt` **salvo `marketplace`** (ADR 0020), que pide tres páginas públicas sin sesión por ejecución. No usa cuentas, cookies, proxies ni navegadores disfrazados, y falla si la página pide iniciar sesión.
+- Todos los scrapers respetan `robots.txt` **salvo `marketplace`** (ADR 0020), que pide tres páginas públicas sin sesión por ejecución. No usa cuentas, cookies, proxies ni navegadores disfrazados, y falla si la página pide iniciar sesión. Fuera del scraper, la vigilancia de Plusvalía desde la extensión recarga una URL con `?sort=`, que el `robots.txt` de Plusvalía prohíbe a los rastreadores (`Disallow: *?sort=*`); el dueño lo aceptó (ADR 0021).
 - De Marketplace no se lee el bloque del vendedor, y los teléfonos escritos en el título (también con emojis) se eliminan antes de guardar.
 - **Allowlist de hosts por adaptador.** El cliente HTTP rechaza cualquier otro destino y no sigue redirecciones a otros dominios (anti-SSRF).
 - **Suscripciones push con allowlist.** El endpoint que manda el navegador solo se acepta si es `https`, sin puerto ni credenciales, y su host pertenece a un servicio de push conocido (FCM, Mozilla, Apple, Windows). El emisor lo vuelve a comprobar antes de cada envío y no sigue redirecciones. La clave privada VAPID vive solo en el Mac que corre la ingesta.
 - Timeouts, tamaño máximo de respuesta y reintentos con backoff.
 - El contenido de los anuncios **no es confiable**. Se guarda como texto plano: se eliminan las etiquetas HTML y se normalizan espacios. Las URLs se validan (solo `https` y el dominio del portal).
 - Las imágenes se referencian por URL validada; no se descargan ni se procesan en el servidor.
+- **Capturas de la extensión** (`depazo import` y `depazo receive-capture`): la URL del anuncio exige el host exacto del portal y la de la imagen, un host que termine en el sufijo del CDN permitido (`.naventcdn.com` para Plusvalía, `.fbcdn.net` para Marketplace), ambas sobre una URL analizada de forma estricta, que rechaza barras invertidas, credenciales, puertos explícitos, caracteres de control y espacios. Los teléfonos se eliminan del título y del sector con la misma limpieza que usa Marketplace.
+- **Host nativo de captura** (ADR 0021): Chrome lanza `scripts/capture_host.sh` solo para la extensión cuyo identificador figura en `allowed_origins`. El script ignora sus argumentos, no lee la entrada estándar y ejecuta `depazo receive-capture`, que lee una sola trama, la rechaza por su longitud declarada si pasa de 256 KiB antes de leer el cuerpo, la valida con Pydantic, acepta como máximo 100 anuncios y solo de `plusvalia`, y responde con una sola trama. Los errores son un conjunto cerrado de códigos (`invalid_capture`, `unavailable`), nunca el texto de una excepción. Los diagnósticos van a `~/Library/Logs/depazo/capture-host.log`. Comparte el candado de la ingesta programada, con una espera de 30 s.
+- **Regla de parada de Plusvalía** (ADR 0021): si tras una recarga de la pestaña vigía no llega en un minuto un informe con al menos un anuncio legible, la extensión pasa a "necesita atención" y deja de recargar. Si la Mac no tiene conexión en el momento del ciclo, la recarga se salta sin cambiar el estado. No se reanuda sola: solo con el botón "Reanudar" del popup.
 
 ### Extensión de navegador
 
-- Solo pide `storage` y acceso a `www.plusvalia.com` y `www.facebook.com`; no tiene service worker ni red propia.
+- Pide `storage`, `alarms` y `nativeMessaging`, y acceso a `www.plusvalia.com` y `www.facebook.com`. No pide `tabs`.
+- Tiene un service worker (ADR 0021) que recarga la pestaña vigía de Plusvalía y entrega las capturas al host nativo `com.depazo.capture`. **No tiene red propia:** la CSP de sus páginas declara `connect-src 'none'`, y el host nativo es su único canal de salida. No guarda ningún secreto; la `key` del manifest es una clave pública.
+- El service worker solo acepta informes cuyo remitente es la propia extensión (`sender.id === chrome.runtime.id`) desde una pestaña en el origen de Plusvalía, y vuelve a validar el contenido con Zod. No registra `onMessageExternal`.
 - En Facebook el script corre en todo el dominio (Marketplace es una SPA), pero solo captura en páginas `/marketplace/<ciudad>/propertyrentals` y solo lee las tarjetas de anuncios.
-- Nunca lee nombres, teléfonos ni perfiles de vendedores. Todo queda en `chrome.storage.local` hasta que el usuario exporta.
-- Lo capturado se valida con Zod al guardarlo y con Pydantic (`extra="forbid"`, límites, hosts permitidos) al importarlo.
+- Nunca lee el bloque del vendedor (nombre, teléfono, perfil). El título es texto libre del anunciante: los teléfonos escritos en él se eliminan en el backend al importar o recibir la captura.
+- Las capturas quedan en `chrome.storage.local` hasta que el usuario exporta. Con la vigilancia de Plusvalía encendida (viene apagada), los anuncios que informa la pestaña vigía (no los de otras pestañas de Plusvalía) se entregan además al host nativo, como máximo 100 por mensaje, y solo se marcan como entregados con una respuesta `ok: true`. Mientras tanto esperan en una cola de `chrome.storage.local` de hasta 500 anuncios.
+- Lo capturado se valida con Zod al guardarlo y con Pydantic (`extra="forbid"`, límites, hosts permitidos) al importarlo o al recibirlo por el host nativo.
 
 ### PWA (React)
 - **Nunca se usa `dangerouslySetInnerHTML`.** React escapa todo el texto por defecto.
@@ -101,8 +108,8 @@ La CSP se ajusta cuando se elija el proveedor de mapas. Se valida con securityhe
 
 | Secreto | Dónde vive | Quién lo usa |
 |---|---|---|
-| `DEPAZO_DATABASE_URL`, clave de servicio de Supabase | Variables de entorno cifradas del proyecto de la API en Vercel; en la Mac, `~/.config/depazo/env` (permisos `600`) | API e ingesta |
-| Claves VAPID (privada) | Ídem | Ingesta (notificaciones) |
+| `DEPAZO_DATABASE_URL`, clave de servicio de Supabase | Variables de entorno cifradas del proyecto de la API en Vercel; en la Mac, `~/.config/depazo/env` (permisos `600`) | API, ingesta y host nativo de captura |
+| Claves VAPID (privada) | Ídem | Ingesta y host nativo de captura (notificaciones) |
 | `RESEND_API_KEY` | Ídem | Ingesta |
 | `SENTRY_DSN` | Ídem (el del frontend es público por diseño) | Todos |
 | Local | `.env`, ignorado por git y bloqueado para Claude en `.claude/settings.json` | Desarrollo |
@@ -111,6 +118,7 @@ La CSP se ajusta cuando se elija el proveedor de mapas. Se valida con securityhe
 - En GitHub: **secret scanning + push protection**, activados.
 - `.env.example` lista las variables sin valores.
 - Si se filtra un secreto, se **revoca y rota de inmediato**; reescribir el historial no basta.
+- El host nativo de captura (ADR 0021) lo lanza Chrome y carga `~/.config/depazo/env`. Ningún secreto viaja a la extensión: la respuesta del host solo lleva contadores o un código de error.
 
 ## 7. Seguridad automatizada (CI)
 

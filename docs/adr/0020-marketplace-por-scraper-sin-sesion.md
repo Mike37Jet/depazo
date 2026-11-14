@@ -46,3 +46,6 @@ Para sostener la regla de "si un sitio bloquea, el adaptador se detiene":
 - El script se ejecuta bajo `lockf` (`~/.config/depazo/scheduled-ingest.lock`), así que los dos agentes nunca corren a la vez. Si el otro tarda más de 15 minutos, la ejecución se salta con el código `75`.
 
 Log en `~/Library/Logs/depazo/ingest-marketplace.log`. Para quitarlo: `launchctl bootout gui/$(id -u)/com.depazo.ingest.marketplace` y borrar el plist de `~/Library/LaunchAgents/`. Si la Mac está apagada o dormida no hay sondeo; al despertar, launchd corre una sola vez las ejecuciones perdidas.
+
+## Actualización 2026-11-14 (ADR 0021)
+"Plusvalía no cambia" dejó de ser cierto: la extensión ahora la vigila por su cuenta desde el navegador del dueño, la vía que este ADR dejó anotada entre las alternativas. Ver el [ADR 0021](0021-vigilancia-de-plusvalia-desde-la-extension.md).

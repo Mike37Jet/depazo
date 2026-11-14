@@ -25,3 +25,6 @@ La base es un PostGIS local permanente (contenedor `depazo-db` con el volumen `d
 - Si la Mac está apagada no hay ingesta. Al despertar, launchd corre la ejecución pendiente.
 - La IP es residencial, así que hay menos riesgo de que iCasas bloquee el acceso que desde un datacenter.
 - Para desactivarla: `launchctl bootout gui/$(id -u)/com.depazo.ingest`.
+
+## Actualización 2026-11-14 (ADR 0021)
+El clon de despliegue aloja también el host de Native Messaging de la extensión (`scripts/capture_host.sh`), que Chrome lanza para recibir las capturas de Plusvalía. Toma el mismo candado que `scripts/scheduled_ingest.sh` y lee el mismo `~/.config/depazo/env`, pero no actualiza el clon, no aplica migraciones y no arranca Docker. El detalle está en el [ADR 0021](0021-vigilancia-de-plusvalia-desde-la-extension.md).

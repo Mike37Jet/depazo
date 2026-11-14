@@ -35,7 +35,7 @@ PWA multiusuario que automatiza la búsqueda de departamentos en arriendo en **Q
 | Frontend (PWA) | Vite, React, TypeScript strict, TanStack Router/Query, Tailwind + shadcn/ui, vite-plugin-pwa, MapLibre, Motion · Atomic Design + Storybook · pnpm · Biome · Vitest + Testing Library + MSW · Playwright |
 | Backend / API | Python 3.13, Clean Architecture, FastAPI, Pydantic v2, SQLAlchemy 2 async, Alembic · uv · Ruff · mypy strict · pytest + Hypothesis + Testcontainers + respx |
 | Ingesta | CLI `depazo ingest` (Typer), httpx + selectolax; Playwright solo si es imprescindible |
-| Extensión (captura asistida) | Chrome MV3, TypeScript strict, esbuild, Zod (`zod/mini`), Biome, Vitest + happy-dom |
+| Extensión (captura asistida y vigilancia de Plusvalía) | Chrome MV3 (content scripts, popup y service worker con `chrome.alarms` y Native Messaging, ADR 0021), TypeScript strict, esbuild, Zod (`zod/mini`), Biome, Vitest + happy-dom |
 | Datos / Auth | Supabase: Postgres + PostGIS, Supabase Auth (la API valida el JWT) |
 | Notificaciones | Web Push (VAPID, pywebpush), email con Resend |
 | Infra (free tiers) | Vercel: web estática y API en funciones de Python, con `/api` reescrito al proyecto de la API (ADR 0019) · Supabase Postgres por el pooler · Sentry · sin CI ni cron en GitHub Actions (ADR 0017) |
@@ -55,8 +55,8 @@ frontend/src/
   components/{atoms,molecules,organisms,templates}/
   pages/  routes/  hooks/  api/ (generado, no editar)
 frontend/e2e/
-extension/src/{capture,sources/<portal>,content,popup}/   public/ (manifest, popup.html)
-extension/tests/{sources,capture,contract,fixtures}/
+extension/src/{capture,sources/<portal>,content,popup,background,watch}/   public/ (manifest, popup.html)
+extension/tests/{sources,capture,contract,watch,popup,fixtures}/
 docs/  .github/workflows/
 ```
 
@@ -76,6 +76,7 @@ Backend (desde `backend/`):
 | Avisos push | `--notify-users` (requiere `--save`) avisa a cada usuario con dispositivos suscritos de los anuncios nuevos o con precio nuevo que superan su puntaje mínimo, sin contar sus descartados. Variables: `DEPAZO_VAPID_PRIVATE_KEY` (solo en el Mac) y, opcional, `DEPAZO_VAPID_SUBJECT`. La web necesita `VITE_VAPID_PUBLIC_KEY` |
 | Importar captura | `uv run depazo import <archivo.json> [--save]` |
 | Ingesta programada | LaunchAgent `com.depazo.ingest` cada 3 h → `scripts/scheduled_ingest.sh` desde el clon `~/.local/share/depazo/app` (ADR 0018). Config en `~/.config/depazo/{env,profile.json}`, log en `~/Library/Logs/depazo/ingest.log`. Ejecutar ya: `launchctl kickstart gui/$(id -u)/com.depazo.ingest`. Un segundo agente, `com.depazo.ingest.marketplace`, pide solo Marketplace cada 20 min de 07:00 a 22:00 (log en `ingest-marketplace.log`, ADR 0020). Los dos comparten un candado y una fuente que bloquea queda en pausa 24 h (`~/.config/depazo/blocked-<fuente>`) |
+| Host nativo de captura | `scripts/install_capture_host.sh`, ejecutado desde el clon `~/.local/share/depazo/app`, registra en Chrome el host de Native Messaging `com.depazo.capture` (ADR 0021). Chrome lanza `scripts/capture_host.sh`, que corre `uv run depazo receive-capture [--notify-users]`: lee una trama con la captura de Plusvalía por la entrada estándar, la guarda y avisa igual que `depazo import --save`, y responde con una trama. Comparte el candado de la ingesta programada. Log en `~/Library/Logs/depazo/capture-host.log` |
 | Ranking | `uv run depazo match --profile <perfil.json> [--limit 20] [--output json]` (ejemplo en `docs/examples/search_profile.json`) |
 | API | `uv run uvicorn depazo.bootstrap:create_api_app --factory` · endpoints `GET /health`, `GET`/`PUT /me/search-profile`, `GET /me/matches?limit=`, `GET /me/saved-listings`, `PUT`/`DELETE /me/listings/{source}/{external_id}/reaction`, `PUT`/`DELETE /me/push-subscription`, `GET /neighborhoods`. Variables: `DEPAZO_DATABASE_URL`, `DEPAZO_SUPABASE_URL` (origen https del proyecto), opcionales `DEPAZO_CORS_ORIGINS` (JSON), `DEPAZO_REQUESTS_PER_MINUTE` (60) y `DEPAZO_IS_OPENAPI_PUBLISHED` (`false`; `true` solo fuera de producción) |
 
@@ -149,12 +150,13 @@ Detalle en `docs/security.md`.
 - El service worker no cachea respuestas autenticadas.
 - Antes de cambios grandes en auth, API o ingesta, correr la skill `/security-review`.
 
-## Fuentes de datos y scraping (ADR 0016 y 0020)
+## Fuentes de datos y scraping (ADR 0016, 0020 y 0021)
 
 Proyecto personal y experimental, sin fines comerciales.
 - **Automático (scraper):** sitios públicos sin protección técnica (iCasas, BienesOnline, arriendos.ec), **aunque sus términos lo prohíban**. Siempre con frecuencia baja, respetando `robots.txt` y con un User-Agent identificable. Si un sitio empieza a bloquear, el adaptador se detiene; no se escala.
-- **Automático sin sesión (ADR 0020):** Facebook Marketplace. Tres peticiones por ejecución a páginas públicas, sin cuenta ni cookies. Es la **única fuente que no consulta `robots.txt`**; mantiene el User-Agent identificable y se detiene si Facebook bloquea o pide iniciar sesión. Nunca lee el bloque del vendedor y elimina los teléfonos del título.
-- **Asistido (extensión de navegador):** Plusvalía y Facebook Marketplace. El usuario navega con su propia sesión y la extensión captura los anuncios que él ve. No hay bots en Plusvalía ni se automatiza la cuenta de Facebook.
+- **Automático sin sesión (ADR 0020):** Facebook Marketplace. Tres peticiones por ejecución a páginas públicas, sin cuenta ni cookies. Es la **única fuente del scraper que no consulta `robots.txt`**; mantiene el User-Agent identificable y se detiene si Facebook bloquea o pide iniciar sesión. Nunca lee el bloque del vendedor y elimina los teléfonos del título.
+- **Asistido (extensión de navegador):** Plusvalía y Facebook Marketplace. El usuario navega con su propia sesión y la extensión captura los anuncios que él ve. No se automatiza la cuenta de Facebook.
+- **Vigilancia de Plusvalía desde la extensión (ADR 0021):** con el interruptor del popup encendido (viene apagado), la extensión recarga una pestaña fijada de Plusvalía cada 20 min de 07:00 a 22:00 y entrega los anuncios nuevos por Native Messaging al host local, que los guarda y avisa por push. Es automatización **dentro del navegador del dueño**: no hay clientes automatizados fuera de él y no se evade ni se resuelve ningún desafío. La URL vigía usa `?sort=`, que el `robots.txt` de Plusvalía prohíbe a los rastreadores; el dueño lo aceptó. Si tras una recarga no llega en un minuto un informe con anuncios legibles, la vigilancia se detiene (sin conexión el ciclo se salta, no se detiene) y **solo la reanuda el dueño** con "Reanudar".
 - **Properati no se captura:** publica el mismo inventario que iCasas (Lifull Connect), que ya entra por el scraper.
 - **Oficial (API):** Mercado Libre, cuando se registre la app.
 - No se guardan datos personales de los anunciantes (nombre, teléfono, email, nombre de agente): solo la URL del anuncio (LOPDP Ecuador). Los fixtures de tests se anonimizan. Los usuarios pueden exportar sus datos y borrar su cuenta.

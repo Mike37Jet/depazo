@@ -27,3 +27,6 @@ Properati sale de la extensión. Properati Ecuador e iCasas son de Lifull Connec
 
 ## Actualización 2026-11-14 (ADR 0020)
 Facebook Marketplace pasa a tener además un scraper automático sin sesión, que es la única fuente que no consulta `robots.txt`. El detalle y el porqué están en el [ADR 0020](0020-marketplace-por-scraper-sin-sesion.md). Plusvalía sigue solo por la extensión.
+
+## Actualización 2026-11-14 (ADR 0021)
+Plusvalía deja de depender de que el dueño navegue: la extensión recarga por su cuenta una pestaña fijada cada 20 minutos, de 07:00 a 22:00, y entrega los anuncios a un host local en la Mac. Es automatización dentro del navegador del dueño, así que "sin bots" ya no describe a Plusvalía tal cual; sigue sin haber clientes automatizados fuera del navegador y sin evadir protecciones. La URL que recarga usa `?sort=`, que el `robots.txt` de Plusvalía prohíbe a los rastreadores, así que la frase "única fuente que no consulta `robots.txt`" de la nota anterior vale solo para los scrapers. El detalle, los costos y la regla de parada están en el [ADR 0021](0021-vigilancia-de-plusvalia-desde-la-extension.md).
