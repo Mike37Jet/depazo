@@ -6,7 +6,9 @@ from hypothesis import strategies as st
 
 from depazo.domain.listing import (
     MAX_PLAUSIBLE_APARTMENT_AREA_M2,
+    MAX_PLAUSIBLE_MONTHLY_RENT_USD,
     MIN_PLAUSIBLE_APARTMENT_AREA_M2,
+    MIN_PLAUSIBLE_MONTHLY_RENT_USD,
     GeoPoint,
     InvalidListingError,
     plausible_apartment_area,
@@ -56,3 +58,15 @@ def test_plausible_area_is_either_discarded_or_within_bounds(area: Decimal) -> N
         result is None
         or MIN_PLAUSIBLE_APARTMENT_AREA_M2 <= result <= MAX_PLAUSIBLE_APARTMENT_AREA_M2
     )
+
+
+@given(st.decimals(min_value=0, max_value=1_000_000, allow_nan=False, places=0))
+def test_plausible_rent_matches_rental_bounds(rent: Decimal) -> None:
+    listing = a_listing(monthly_rent_usd=rent)
+
+    is_within_bounds = MIN_PLAUSIBLE_MONTHLY_RENT_USD <= rent <= MAX_PLAUSIBLE_MONTHLY_RENT_USD
+    assert listing.has_plausible_rent == is_within_bounds
+
+
+def test_listing_without_price_has_plausible_rent() -> None:
+    assert a_listing(monthly_rent_usd=None).has_plausible_rent

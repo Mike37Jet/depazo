@@ -70,7 +70,8 @@ async def _collect(open_source: SourceOpener, pages: int) -> CollectionReport:
 
 
 def _print_table(report: CollectionReport) -> None:
-    typer.echo(f"{len(report.listings)} listings from {report.source}")
+    discarded = f" ({report.discarded_count} discarded)" if report.discarded_count else ""
+    typer.echo(f"{len(report.listings)} listings from {report.source}{discarded}")
     for listing in report.listings:
         typer.echo(_format_row(listing))
 

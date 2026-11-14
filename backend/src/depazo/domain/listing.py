@@ -3,6 +3,8 @@ from decimal import Decimal
 
 MIN_PLAUSIBLE_APARTMENT_AREA_M2 = Decimal(10)
 MAX_PLAUSIBLE_APARTMENT_AREA_M2 = Decimal(2000)
+MIN_PLAUSIBLE_MONTHLY_RENT_USD = Decimal(100)
+MAX_PLAUSIBLE_MONTHLY_RENT_USD = Decimal(20000)
 MAX_LATITUDE = 90.0
 MAX_LONGITUDE = 180.0
 
@@ -50,6 +52,14 @@ class Listing:
             raise InvalidListingError("rent and condo fee cannot be negative")
         if any(count is not None and count < 0 for count in (self.bedrooms, self.bathrooms)):
             raise InvalidListingError("room counts cannot be negative")
+
+    @property
+    def has_plausible_rent(self) -> bool:
+        return self.monthly_rent_usd is None or (
+            MIN_PLAUSIBLE_MONTHLY_RENT_USD
+            <= self.monthly_rent_usd
+            <= MAX_PLAUSIBLE_MONTHLY_RENT_USD
+        )
 
 
 def plausible_apartment_area(area_m2: Decimal) -> Decimal | None:
