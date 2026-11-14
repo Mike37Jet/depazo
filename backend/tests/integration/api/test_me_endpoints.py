@@ -175,3 +175,92 @@ async def test_hides_the_api_schema_unless_published(client: httpx.AsyncClient) 
 
     assert schema.status_code == 404
     assert docs.status_code == 404
+
+
+async def test_saves_and_discards_listings_for_the_user(
+    client: httpx.AsyncClient, session_factory: async_sessionmaker[AsyncSession]
+) -> None:
+    await save_listings(session_factory, {"external_id": "keep"}, {"external_id": "drop"})
+    headers = authorized(uuid4())
+    await client.put("/me/search-profile", json=PROFILE, headers=headers)
+
+    saved = await client.put(
+        "/me/listings/test-source/keep/reaction", json={"reaction": "saved"}, headers=headers
+    )
+    discarded = await client.put(
+        "/me/listings/test-source/drop/reaction", json={"reaction": "discarded"}, headers=headers
+    )
+    matches = (await client.get("/me/matches", headers=headers)).json()
+    saved_listings = (await client.get("/me/saved-listings", headers=headers)).json()
+
+    assert saved.status_code == discarded.status_code == 204
+    assert [match["listing"]["external_id"] for match in matches["matches"]] == ["keep"]
+    assert matches["matches"][0]["is_saved"] is True
+    assert matches["discarded_count"] == 1
+    assert [match["listing"]["external_id"] for match in saved_listings["matches"]] == ["keep"]
+
+
+async def test_undoing_a_discard_brings_the_listing_back(
+    client: httpx.AsyncClient, session_factory: async_sessionmaker[AsyncSession]
+) -> None:
+    await save_listings(session_factory, {"external_id": "drop"})
+    headers = authorized(uuid4())
+    await client.put("/me/search-profile", json=PROFILE, headers=headers)
+    url = "/me/listings/test-source/drop/reaction"
+    await client.put(url, json={"reaction": "discarded"}, headers=headers)
+
+    cleared = await client.delete(url, headers=headers)
+    matches = (await client.get("/me/matches", headers=headers)).json()
+
+    assert cleared.status_code == 204
+    assert matches["discarded_count"] == 0
+    assert len(matches["matches"]) == 1
+
+
+async def test_one_user_cannot_see_or_change_another_users_reactions(
+    client: httpx.AsyncClient, session_factory: async_sessionmaker[AsyncSession]
+) -> None:
+    await save_listings(session_factory, {"external_id": "shared"})
+    owner, intruder = authorized(uuid4()), authorized(uuid4())
+    for headers in (owner, intruder):
+        await client.put("/me/search-profile", json=PROFILE, headers=headers)
+    url = "/me/listings/test-source/shared/reaction"
+    await client.put(url, json={"reaction": "saved"}, headers=owner)
+
+    await client.delete(url, headers=intruder)
+    intruder_saved = (await client.get("/me/saved-listings", headers=intruder)).json()
+    intruder_matches = (await client.get("/me/matches", headers=intruder)).json()
+    owner_saved = (await client.get("/me/saved-listings", headers=owner)).json()
+
+    assert intruder_saved["matches"] == []
+    assert intruder_matches["matches"][0]["is_saved"] is False
+    assert len(owner_saved["matches"]) == 1
+
+
+async def test_reports_reactions_to_unknown_listings(client: httpx.AsyncClient) -> None:
+    response = await client.put(
+        "/me/listings/test-source/missing/reaction",
+        json={"reaction": "saved"},
+        headers=authorized(uuid4()),
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "body", [{"reaction": "loved"}, {"reaction": "saved", "note": "x"}], ids=["unknown", "extra"]
+)
+async def test_rejects_invalid_reactions(client: httpx.AsyncClient, body: dict[str, Any]) -> None:
+    response = await client.put(
+        "/me/listings/test-source/listing-1/reaction", json=body, headers=authorized(uuid4())
+    )
+
+    assert response.status_code == 422
+
+
+async def test_reactions_need_a_token(client: httpx.AsyncClient) -> None:
+    response = await client.put(
+        "/me/listings/test-source/listing-1/reaction", json={"reaction": "saved"}
+    )
+
+    assert response.status_code == 401

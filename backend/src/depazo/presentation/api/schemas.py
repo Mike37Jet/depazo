@@ -3,8 +3,10 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 
-from depazo.application.use_cases.rank_listings import RankedListing, RankingReport
+from depazo.application.use_cases.rank_listings import RankedListing
+from depazo.application.use_cases.rank_user_matches import UserMatchesReport
 from depazo.domain.listing import Listing
+from depazo.domain.listing_reaction import ListingKey, Reaction
 from depazo.domain.neighborhoods import NeighborhoodSummary
 from depazo.domain.scoring import CriterionScore
 from depazo.domain.search_profile import ScoreWeights, SearchProfile
@@ -133,13 +135,17 @@ class MatchBody(StrictModel):
     score: int
     breakdown: list[CriterionBody]
     listing: ListingBody
+    is_saved: bool
+    passed_hard_filters: bool
 
     @classmethod
-    def from_domain(cls, match: RankedListing) -> "MatchBody":
+    def from_domain(cls, match: RankedListing, is_saved: bool) -> "MatchBody":
         return cls(
             score=match.result.total,
             breakdown=[CriterionBody.from_domain(item) for item in match.result.breakdown],
             listing=ListingBody.from_domain(match.listing),
+            is_saved=is_saved,
+            passed_hard_filters=match.result.passed_hard_filters,
         )
 
 
@@ -148,15 +154,33 @@ class MatchesBody(StrictModel):
     match_count: int
     evaluated_count: int
     rejected_count: int
+    discarded_count: int
 
     @classmethod
-    def from_report(cls, report: RankingReport, limit: int) -> "MatchesBody":
+    def from_report(cls, report: UserMatchesReport, limit: int) -> "MatchesBody":
+        ranking = report.ranking
         return cls(
-            matches=[MatchBody.from_domain(match) for match in report.matches[:limit]],
-            match_count=len(report.matches),
-            evaluated_count=report.evaluated_count,
-            rejected_count=report.rejected_count,
+            matches=[
+                MatchBody.from_domain(match, ListingKey.of(match.listing) in report.saved_keys)
+                for match in ranking.matches[:limit]
+            ],
+            match_count=len(ranking.matches),
+            evaluated_count=ranking.evaluated_count,
+            rejected_count=ranking.rejected_count,
+            discarded_count=report.discarded_count,
         )
+
+
+class SavedListingsBody(StrictModel):
+    matches: list[MatchBody]
+
+    @classmethod
+    def from_domain(cls, saved: tuple[RankedListing, ...]) -> "SavedListingsBody":
+        return cls(matches=[MatchBody.from_domain(match, is_saved=True) for match in saved])
+
+
+class ReactionBody(StrictModel):
+    reaction: Reaction
 
 
 class NeighborhoodBody(StrictModel):

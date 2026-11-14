@@ -1,5 +1,6 @@
 from typing import Protocol, Self
 
+from depazo.application.ports.listing_reaction_repository import ListingReactionRepository
 from depazo.application.ports.listing_repository import ListingRepository
 from depazo.application.ports.search_profile_repository import SearchProfileRepository
 
@@ -7,6 +8,9 @@ from depazo.application.ports.search_profile_repository import SearchProfileRepo
 class UnitOfWork(Protocol):
     @property
     def listings(self) -> ListingRepository: ...
+
+    @property
+    def listing_reactions(self) -> ListingReactionRepository: ...
 
     @property
     def search_profiles(self) -> SearchProfileRepository: ...

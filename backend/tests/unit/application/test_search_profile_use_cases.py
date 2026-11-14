@@ -50,7 +50,7 @@ async def test_ranks_listings_with_the_users_own_profile() -> None:
 
     report = await RankUserMatches(lambda: unit_of_work).execute(owner)
 
-    assert len(report.matches) == 1
+    assert len(report.ranking.matches) == 1
 
 
 async def test_asks_for_a_profile_before_ranking() -> None:

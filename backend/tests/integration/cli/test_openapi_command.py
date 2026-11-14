@@ -16,6 +16,8 @@ def test_prints_the_api_description_for_client_generation() -> None:
         "/health",
         "/me/search-profile",
         "/me/matches",
+        "/me/saved-listings",
+        "/me/listings/{source}/{external_id}/reaction",
         "/neighborhoods",
     }
     assert "MatchesBody" in description["components"]["schemas"]

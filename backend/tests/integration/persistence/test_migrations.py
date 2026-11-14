@@ -27,4 +27,4 @@ def test_migrations_downgrade_and_upgrade_cleanly(database_url: str) -> None:
     tables_after_upgrade = asyncio.run(listing_tables_in(database_url))
 
     assert tables_after_downgrade == set()
-    assert tables_after_upgrade == {"listings", "listing_price_history"}
+    assert tables_after_upgrade == {"listings", "listing_price_history", "listing_reactions"}
