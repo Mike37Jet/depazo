@@ -23,7 +23,7 @@
 | **T**ampering (manipulación) | Modificar la búsqueda de otro usuario cambiando el ID en la URL (IDOR) | Toda consulta filtra por el `user_id` del token. RLS en Postgres como segunda barrera. Tests de autorización |
 | **R**epudio | No poder reconstruir qué pasó ante un incidente | Logs estructurados de acciones sensibles (login, borrar cuenta, cambios de perfil), sin datos personales |
 | **I**nformation disclosure (fuga de información) | Filtrar la zona de búsqueda de un usuario, secretos o trazas internas | Errores genéricos al cliente; secretos solo en el servidor; `/docs` de la API desactivado en producción; Sentry con limpieza de datos sensibles |
-| **D**enegación de servicio | Que alguien inunde la API o agote los free tiers | Rate limiting por usuario e IP; límites de tamaño de request y de número de perfiles por usuario; escala a 0 con tope de instancias en Cloud Run |
+| **D**enegación de servicio | Que alguien inunde la API o agote los free tiers | Rate limiting por usuario e IP; límites de tamaño de request y de número de perfiles por usuario; funciones serverless de Vercel con tope de duración |
 | **E**levación de privilegios | Usar la clave de servicio de Supabase desde el frontend; ejecutar código desde el HTML de un anuncio | La clave de servicio nunca sale del backend; el contenido de los anuncios se trata como no confiable (ver §4) |
 
 ## 3. OWASP Top 10:2025 aplicado
@@ -49,7 +49,7 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 - Dependencia `current_user` que valida el JWT (JWKS en caché, `aud = authenticated`, `iss` de nuestro proyecto, `exp`).
 - **Autorización en los casos de uso.** Los repositorios reciben el `user_id` y filtran siempre por él.
 - Schemas Pydantic con `extra="forbid"`, límites de longitud y rangos (por ejemplo, polígonos de zona con un número máximo de vértices).
-- Rate limiting por usuario (v1: en memoria, por instancia; con varias instancias pasa al de Cloudflare) y body de máximo 16 KiB (413; sin `Content-Length` responde 411).
+- Rate limiting por usuario (v1: en memoria, por instancia de Vercel; si hace falta uno global, pasa a un almacén compartido) y body de máximo 16 KiB (413; sin `Content-Length` responde 411).
 - `/openapi.json` y `/docs` apagados salvo `DEPAZO_IS_OPENAPI_PUBLISHED=true`. Los 422 no repiten el input recibido.
 - Middleware de headers de seguridad y CORS con una lista explícita de orígenes.
 
@@ -81,7 +81,7 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 
 ## 5. Headers de seguridad
 
-Se aplican en Cloudflare Pages (`_headers`) para la PWA y en un middleware para la API:
+Se aplican en `frontend/vercel.json` para la PWA (Vercel agrega HSTS en sus dominios) y en un middleware para la API:
 
 ```
 Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
@@ -98,7 +98,7 @@ La CSP se ajusta cuando se elija el proveedor de mapas. Se valida con securityhe
 
 | Secreto | Dónde vive | Quién lo usa |
 |---|---|---|
-| `DEPAZO_DATABASE_URL`, clave de servicio de Supabase | GitHub Secrets / Cloud Run (Secret Manager) | API e ingesta |
+| `DEPAZO_DATABASE_URL`, clave de servicio de Supabase | Variables de entorno cifradas del proyecto de la API en Vercel; en la Mac, `~/.config/depazo/env` (permisos `600`) | API e ingesta |
 | Claves VAPID (privada) | Ídem | Ingesta (notificaciones) |
 | `RESEND_API_KEY` | Ídem | Ingesta |
 | `SENTRY_DSN` | Ídem (el del frontend es público por diseño) | Todos |

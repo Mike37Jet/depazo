@@ -24,8 +24,8 @@ flowchart LR
         DB[(Postgres + PostGIS)]
         AUTH[Auth]
     end
-    API[FastAPI - Cloud Run]
-    WEB[PWA React - Cloudflare Pages]
+    API[FastAPI - Vercel Functions]
+    WEB[PWA React - Vercel]
     MAIL[Resend - email]
     PUSH[Web Push - VAPID]
 
@@ -128,8 +128,7 @@ Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el c
 |---|---|---|
 | ~~GitHub Actions~~ | Descartado (ADR 0017) por problemas de facturación de la cuenta | Verificación local; para el cron, Cloud Run Jobs + Cloud Scheduler o una máquina propia |
 | Supabase Free | DB 500 MB + Auth | El proyecto se pausa tras 7 días sin actividad (la ingesta horaria lo mantiene activo). Purgar anuncios dados de baja hace más de 90 días |
-| Cloud Run | API (escala a 0) | Requiere tarjeta en GCP aunque no se cobre. Alternativa sin tarjeta: Render (arranque en frío de unos 50 s) |
-| Cloudflare Pages | PWA estática | Uso comercial permitido |
+| Vercel Hobby | PWA estática y API en funciones de Python (ADR 0019) | Solo uso personal; si depazo se vuelve comercial, plan Pro. El limitador en memoria es por instancia |
 | Resend Free | Email | Unos 100 emails/día: usar resumen diario, no un email por cada match |
 | Sentry Free | Errores de API, worker y web | — |
 | Web Push en iOS | — | Solo funciona con la PWA instalada (iOS 16.4+); el email cubre ese caso |
