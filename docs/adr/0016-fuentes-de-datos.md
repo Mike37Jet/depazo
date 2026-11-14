@@ -12,7 +12,7 @@ Tres vías, todas convergiendo en el mismo pipeline (cada una es un adaptador de
 | Vía | Fuentes | Cómo |
 |---|---|---|
 | **Scraper automático** | iCasas (primero), BienesOnline, arriendos.ec | Páginas públicas sin protección técnica, **aunque sus términos lo prohíban** (riesgo contractual asumido por el dueño). Frecuencia baja, respetando `robots.txt`, con un User-Agent identificable. Si un sitio bloquea, el adaptador se detiene |
-| **Extensión asistida** | Plusvalía (prioridad), Facebook Marketplace, Properati | Extensión de navegador: el usuario navega con su propia sesión y la extensión envía a su cuenta los anuncios que está viendo. Sin bots ni cuentas automatizadas |
+| **Extensión asistida** | Plusvalía (prioridad), Facebook Marketplace | Extensión de navegador: el usuario navega con su propia sesión y la extensión envía a su cuenta los anuncios que está viendo. Sin bots ni cuentas automatizadas |
 | **API oficial** | Mercado Libre | App registrada con OAuth, cuando el dueño cree la cuenta de desarrollador |
 
 ## Alternativas consideradas
@@ -21,3 +21,6 @@ Tres vías, todas convergiendo en el mismo pipeline (cada una es un adaptador de
 
 ## Consecuencias
 Búsqueda automática real desde el día 1 con iCasas (unos 550 departamentos en Quito) y cobertura de los portales grandes a través de la extensión. Si iCasas cambia su HTML, solo se rompe su adaptador (con fixtures y tests). Queda un riesgo contractual con los sitios scrapeados, aceptado por ser un proyecto no comercial.
+
+## Actualización 2026-11-14
+Properati sale de la extensión. Properati Ecuador e iCasas son de Lifull Connect y publican el mismo inventario: los 30 anuncios de la primera página de Properati en Quito estaban en iCasas con el mismo identificador, y ambos portales muestran 553 departamentos. iCasas ya entra por el scraper, así que capturar Properati solo produciría duplicados.

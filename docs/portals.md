@@ -1,5 +1,7 @@
 # Verificación de portales (Quito)
 
+> Properati (2026-11-14): con un navegador normal carga sin desafío, pero **no aporta anuncios**. Es de Lifull Connect, como iCasas, y comparte su inventario: los 30 anuncios de su primera página en Quito tenían en iCasas el mismo identificador (`data-idanuncio` = `id` de la tarjeta de iCasas), y ambos muestran 553 departamentos. Solo agrega una ubicación más fina ("La Primavera, Cumbaya, Valle Tumbaco") y un atributo destacado. **Se descarta**: iCasas ya lo cubre con el scraper.
+
 > Scraper (2026-11-13): `PoliteHttpClient` descarga el `robots.txt` de cada host una vez por ejecución (con `protego`, que soporta comodines como `/*/f_*`), no pide URLs prohibidas (ni destinos de redirección), respeta `Crawl-delay` si es mayor que el intervalo del adaptador y, si `robots.txt` responde 5xx, no pide nada. iCasas: unos 553 departamentos en Quito, 30 por página, así que 19 páginas bastan; las páginas fuera de rango vienen vacías y cortan la paginación. Las tarjetas traen precio, m², dormitorios, baños, sector, coordenadas e imagen; **la alícuota no es un campo estructurado ni en la tarjeta ni en la ficha**: solo aparece en el texto libre ("+ alícuota USD 220", "incluye alícuota"), en 3 de 90 descripciones recortadas. La ficha sí trae campos útiles para el puntaje (amueblado, estacionamiento, piso, seguridad). Leer fichas queda para una ingesta incremental de anuncios nuevos, cuando haya persistencia. Si la página 1 no trae tarjetas legibles y el total no es 0, o si hay tarjetas que no se pueden leer, el adaptador lanza `SourceLayoutChangedError` y la ingesta falla (no devuelve 0 anuncios en silencio).
 
 > BienesOnline (2026-11-13): la búsqueda se carga por Livewire (`/livewire/update`, prohibido en `robots.txt`) y no hay páginas por ciudad (`/es/ecuador/quito` da 404). Solo queda el sitemap: 56 archivos de hasta 5 000 URLs con propiedades de toda Latinoamérica; en una muestra, 18 de 5 000 eran de Quito y casi ninguna era un arriendo de departamento. **Se pospone**: cuesta decenas de peticiones por ejecución para unos pocos anuncios. arriendos.ec sigue siendo marginal (su feed trae 20 anuncios de todo el país).
@@ -8,7 +10,7 @@
 
 > Facebook Marketplace (2026-11-13): la categoría `propertyrentals` de Quito se ve sin iniciar sesión. Las clases están ofuscadas, así que la extensión se guía por la estructura: enlace `/marketplace/item/<id>` y tres textos (precio, título, lugar). Habitaciones, baños y m² solo aparecen en el título. Hay mucho ruido (ventas de US$220.000, cuartos de US$10, "Gratis"): el caso de uso descarta los arriendos fuera de 100–20.000 USD. Las imágenes son URLs firmadas del CDN de Facebook y caducan.
 
-> Fecha: 2026-11-13. Decisión: [ADR 0016](adr/0016-fuentes-de-datos.md) (aceptada): scraper para iCasas, BienesOnline y arriendos.ec; extensión asistida para Plusvalía, Marketplace y Properati; API para Mercado Libre.
+> Fecha: 2026-11-13. Decisión: [ADR 0016](adr/0016-fuentes-de-datos.md) (aceptada): scraper para iCasas, BienesOnline y arriendos.ec; extensión asistida para Plusvalía y Marketplace (Properati descartado el 2026-11-14 por duplicar a iCasas); API para Mercado Libre.
 > Método: una petición por recurso (`robots.txt`, términos de uso, una página de listado), con un User-Agent identificable, sin evadir ninguna protección.
 
 ## 1. Resultado por portal
