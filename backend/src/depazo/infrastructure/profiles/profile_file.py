@@ -30,7 +30,7 @@ class WeightsRecord(BaseModel):
     neighborhood: Weight = Decimal("0.25")
 
 
-class SearchProfileRecord(BaseModel):
+class SearchProfileDocument(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     max_monthly_cost_usd: Amount
@@ -67,7 +67,7 @@ def load_search_profile(path: Path) -> SearchProfile:
     try:
         if path.stat().st_size > MAX_PROFILE_FILE_BYTES:
             raise InvalidProfileFileError(f"{path} is larger than {MAX_PROFILE_FILE_BYTES} bytes")
-        record = SearchProfileRecord.model_validate_json(path.read_bytes())
+        record = SearchProfileDocument.model_validate_json(path.read_bytes())
         return record.to_profile()
     except OSError as error:
         raise InvalidProfileFileError(f"cannot read {path}") from error

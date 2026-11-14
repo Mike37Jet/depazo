@@ -3,6 +3,9 @@ from typing import Self
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from depazo.infrastructure.persistence.listing_repository import SqlAlchemyListingRepository
+from depazo.infrastructure.persistence.search_profile_repository import (
+    SqlAlchemySearchProfileRepository,
+)
 
 
 class SqlAlchemyUnitOfWork:
@@ -13,6 +16,10 @@ class SqlAlchemyUnitOfWork:
     @property
     def listings(self) -> SqlAlchemyListingRepository:
         return SqlAlchemyListingRepository(self._active_session())
+
+    @property
+    def search_profiles(self) -> SqlAlchemySearchProfileRepository:
+        return SqlAlchemySearchProfileRepository(self._active_session())
 
     async def __aenter__(self) -> Self:
         self._session = self._session_factory()

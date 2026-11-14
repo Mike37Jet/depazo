@@ -2,7 +2,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from depazo.application.ports.listing_repository import UnitOfWork
+from depazo.application.ports.unit_of_work import UnitOfWork
 from depazo.domain.listing import Listing
 from depazo.domain.sighting import SightingOutcome, classify_sighting
 
