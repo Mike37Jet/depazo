@@ -6,6 +6,9 @@ from depazo.infrastructure.persistence.listing_reaction_repository import (
     SqlAlchemyListingReactionRepository,
 )
 from depazo.infrastructure.persistence.listing_repository import SqlAlchemyListingRepository
+from depazo.infrastructure.persistence.push_subscription_repository import (
+    SqlAlchemyPushSubscriptionRepository,
+)
 from depazo.infrastructure.persistence.search_profile_repository import (
     SqlAlchemySearchProfileRepository,
 )
@@ -23,6 +26,10 @@ class SqlAlchemyUnitOfWork:
     @property
     def listing_reactions(self) -> SqlAlchemyListingReactionRepository:
         return SqlAlchemyListingReactionRepository(self._active_session())
+
+    @property
+    def push_subscriptions(self) -> SqlAlchemyPushSubscriptionRepository:
+        return SqlAlchemyPushSubscriptionRepository(self._active_session())
 
     @property
     def search_profiles(self) -> SqlAlchemySearchProfileRepository:

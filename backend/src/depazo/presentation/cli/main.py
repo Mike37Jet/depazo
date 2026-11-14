@@ -16,23 +16,28 @@ from depazo.application.ports.listing_source import ListingSource, SourceUnavail
 from depazo.application.ports.notifier import NotificationFailedError
 from depazo.application.use_cases.alert_matching_listings import AlertMatchingListings
 from depazo.application.use_cases.collect_listings import CollectionReport, CollectListings
+from depazo.application.use_cases.push_new_matches import PushNewMatches, PushReport
 from depazo.application.use_cases.rank_listings import RankedListing, RankingReport, RankListings
 from depazo.application.use_cases.record_listings import RecordingSummary, RecordListings
 from depazo.bootstrap import (
     EmailAlertSettings,
     InvalidProfileFileError,
     NotificationsNotConfiguredError,
+    PushNotConfiguredError,
     UnknownSourceError,
     email_alert_settings_from_environment,
     load_search_profile,
     open_capture_file_source,
     open_email_notifier,
     open_listing_source,
+    open_push_sender,
     open_unit_of_work_factory,
+    web_push_settings_from_environment,
 )
 from depazo.domain.listing import Listing
 from depazo.domain.scoring import monthly_cost_usd
 from depazo.domain.search_profile import SearchProfile
+from depazo.infrastructure.notifications.web_push_sender import WebPushSettings
 from depazo.infrastructure.persistence.database import DatabaseNotConfiguredError
 from depazo.presentation.api.app import describe_api
 
@@ -64,6 +69,21 @@ AlertProfileOption = Annotated[
     ),
 ]
 
+NotifyUsersOption = Annotated[
+    bool,
+    typer.Option(
+        "--notify-users",
+        help="Send a push notification to every user with new matches (needs --save).",
+    ),
+]
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryRequest:
+    should_save: bool
+    alert_profile_file: Path | None
+    should_notify_users: bool
+
 
 @dataclass(frozen=True, slots=True)
 class AlertPlan:
@@ -76,17 +96,24 @@ class CollectionOutcome:
     report: CollectionReport
     summary: RecordingSummary | None
     alerts: tuple[ListingAlert, ...]
+    push_report: PushReport | None = None
 
 
 @app.command(help="Collect listings from a source and print them.")
-def ingest(
+def ingest(  # noqa: PLR0913, PLR0917
     source: Annotated[str, typer.Option(help="Source name, e.g. icasas.")] = "icasas",
     pages: Annotated[int, typer.Option(min=1, max=MAX_PAGES_PER_RUN)] = 1,
     output: Annotated[OutputFormat, typer.Option()] = OutputFormat.TABLE,
     save: SaveOption = False,
     alert_profile: AlertProfileOption = None,
+    notify_users: NotifyUsersOption = False,
 ) -> None:
-    _collect_and_print(lambda: open_listing_source(source), pages, output, save, alert_profile)
+    _collect_and_print(
+        lambda: open_listing_source(source),
+        pages,
+        output,
+        DeliveryRequest(save, alert_profile, notify_users),
+    )
 
 
 @app.command(name="import", help="Import listings captured with the browser extension.")
@@ -95,9 +122,13 @@ def import_capture(
     output: Annotated[OutputFormat, typer.Option()] = OutputFormat.TABLE,
     save: SaveOption = False,
     alert_profile: AlertProfileOption = None,
+    notify_users: NotifyUsersOption = False,
 ) -> None:
     _collect_and_print(
-        lambda: open_capture_file_source(capture_file), 1, output, save, alert_profile
+        lambda: open_capture_file_source(capture_file),
+        1,
+        output,
+        DeliveryRequest(save, alert_profile, notify_users),
     )
 
 
@@ -155,15 +186,14 @@ def _print_ranking(
 
 
 def _collect_and_print(
-    open_source: SourceOpener,
-    pages: int,
-    output: OutputFormat,
-    should_save: bool,
-    alert_profile_file: Path | None,
+    open_source: SourceOpener, pages: int, output: OutputFormat, delivery: DeliveryRequest
 ) -> None:
     try:
-        alert_plan = _alert_plan(alert_profile_file, should_save)
-        outcome = asyncio.run(_collect(open_source, pages, should_save, alert_plan))
+        alert_plan = _alert_plan(delivery.alert_profile_file, delivery.should_save)
+        push_settings = _push_settings(delivery.should_notify_users, delivery.should_save)
+        outcome = asyncio.run(
+            _collect(open_source, pages, delivery.should_save, alert_plan, push_settings)
+        )
     except NotificationFailedError as error:
         typer.secho(
             f"listings were saved but the alert email failed: {error}",
@@ -177,6 +207,7 @@ def _collect_and_print(
         DatabaseNotConfiguredError,
         InvalidProfileFileError,
         NotificationsNotConfiguredError,
+        PushNotConfiguredError,
     ) as error:
         typer.secho(str(error), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from error
@@ -189,6 +220,8 @@ def _collect_and_print(
         _print_summary(outcome.summary)
     if alert_plan is not None:
         typer.secho(f"alerted: {len(outcome.alerts)} listings", fg=typer.colors.GREEN, err=True)
+    if outcome.push_report is not None:
+        _print_push_report(outcome.push_report)
     if report.was_blocked:
         typer.secho(f"{report.source} blocked the collector; stopped.", fg=typer.colors.YELLOW)
 
@@ -204,8 +237,20 @@ def _alert_plan(alert_profile_file: Path | None, should_save: bool) -> AlertPlan
     )
 
 
+def _push_settings(should_notify_users: bool, should_save: bool) -> WebPushSettings | None:
+    if not should_notify_users:
+        return None
+    if not should_save:
+        raise PushNotConfiguredError("--notify-users needs --save to know which listings are new")
+    return web_push_settings_from_environment()
+
+
 async def _collect(
-    open_source: SourceOpener, pages: int, should_save: bool, alert_plan: AlertPlan | None
+    open_source: SourceOpener,
+    pages: int,
+    should_save: bool,
+    alert_plan: AlertPlan | None,
+    push_settings: WebPushSettings | None = None,
 ) -> CollectionOutcome:
     if not should_save:
         return CollectionOutcome(await _collect_only(open_source, pages), None, ())
@@ -214,11 +259,25 @@ async def _collect(
         summary = await RecordListings(open_unit_of_work, lambda: datetime.now(UTC)).execute(
             report.listings
         )
-    if alert_plan is None:
-        return CollectionOutcome(report, summary, ())
-    async with open_email_notifier(alert_plan.settings) as notifier:
-        alerts = await AlertMatchingListings(notifier).execute(summary, alert_plan.profile)
-    return CollectionOutcome(report, summary, alerts)
+        push_report = None
+        if push_settings is not None:
+            async with open_push_sender(push_settings) as sender:
+                push_report = await PushNewMatches(open_unit_of_work, sender).execute(summary)
+    alerts: tuple[ListingAlert, ...] = ()
+    if alert_plan is not None:
+        async with open_email_notifier(alert_plan.settings) as notifier:
+            alerts = await AlertMatchingListings(notifier).execute(summary, alert_plan.profile)
+    return CollectionOutcome(report, summary, alerts, push_report)
+
+
+def _print_push_report(push_report: PushReport) -> None:
+    typer.secho(
+        f"pushed: {push_report.notified_users} users, "
+        f"{push_report.delivered_count} devices, "
+        f"{push_report.removed_count} expired devices removed",
+        fg=typer.colors.GREEN,
+        err=True,
+    )
 
 
 async def _collect_only(open_source: SourceOpener, pages: int) -> CollectionReport:

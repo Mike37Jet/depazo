@@ -11,7 +11,10 @@ async def listing_tables_in(url: str) -> set[str]:
     engine = create_database_engine(url)
     async with engine.connect() as connection:
         result = await connection.execute(
-            text("SELECT tablename FROM pg_tables WHERE tablename LIKE 'listing%'")
+            text(
+                "SELECT tablename FROM pg_tables "
+                "WHERE tablename LIKE 'listing%' OR tablename = 'push_subscriptions'"
+            )
         )
         tables = set(result.scalars())
     await engine.dispose()
@@ -27,4 +30,9 @@ def test_migrations_downgrade_and_upgrade_cleanly(database_url: str) -> None:
     tables_after_upgrade = asyncio.run(listing_tables_in(database_url))
 
     assert tables_after_downgrade == set()
-    assert tables_after_upgrade == {"listings", "listing_price_history", "listing_reactions"}
+    assert tables_after_upgrade == {
+        "listings",
+        "listing_price_history",
+        "listing_reactions",
+        "push_subscriptions",
+    }

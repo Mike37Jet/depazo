@@ -2,6 +2,7 @@ from typing import Protocol, Self
 
 from depazo.application.ports.listing_reaction_repository import ListingReactionRepository
 from depazo.application.ports.listing_repository import ListingRepository
+from depazo.application.ports.push_subscription_repository import PushSubscriptionRepository
 from depazo.application.ports.search_profile_repository import SearchProfileRepository
 
 
@@ -11,6 +12,9 @@ class UnitOfWork(Protocol):
 
     @property
     def listing_reactions(self) -> ListingReactionRepository: ...
+
+    @property
+    def push_subscriptions(self) -> PushSubscriptionRepository: ...
 
     @property
     def search_profiles(self) -> SearchProfileRepository: ...

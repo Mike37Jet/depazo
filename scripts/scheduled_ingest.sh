@@ -59,6 +59,11 @@ run_ingest() {
   else
     log "email alerts disabled: RESEND_API_KEY or DEPAZO_ALERT_EMAIL is empty"
   fi
+  if [[ -n "${DEPAZO_VAPID_PRIVATE_KEY:-}" ]]; then
+    alert_options+=(--notify-users)
+  else
+    log "push notifications disabled: DEPAZO_VAPID_PRIVATE_KEY is empty"
+  fi
   local source_name
   for source_name in ${DEPAZO_SCHEDULED_SOURCES:-icasas}; do
     log "ingesting $source_name"

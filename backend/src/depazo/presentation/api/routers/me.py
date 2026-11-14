@@ -2,6 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Path, Query, Response, status
 
+from depazo.application.use_cases.manage_push_subscription import (
+    SubscribeToPush,
+    UnsubscribeFromPush,
+)
 from depazo.application.use_cases.manage_search_profile import GetSearchProfile, SaveSearchProfile
 from depazo.application.use_cases.rank_user_matches import (
     ListSavedListings,
@@ -14,10 +18,13 @@ from depazo.application.use_cases.react_to_listing import (
     ReactToListing,
 )
 from depazo.domain.listing_reaction import ListingKey
+from depazo.domain.push_subscription import InvalidPushSubscriptionError
 from depazo.domain.search_profile import InvalidSearchProfileError
 from depazo.presentation.api.dependencies import CurrentUser, Dependencies
 from depazo.presentation.api.schemas import (
     MatchesBody,
+    PushSubscriptionBody,
+    PushUnsubscriptionBody,
     ReactionBody,
     SavedListingsBody,
     SearchProfileBody,
@@ -106,4 +113,28 @@ async def clear_listing_reaction(
     await ClearListingReaction(dependencies.open_unit_of_work).execute(
         user.user_id, ListingKey(source, external_id)
     )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put("/push-subscription", status_code=status.HTTP_204_NO_CONTENT)
+async def subscribe_to_push(
+    body: PushSubscriptionBody, user: CurrentUser, dependencies: Dependencies
+) -> Response:
+    try:
+        subscription = body.to_domain()
+    except InvalidPushSubscriptionError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)
+        ) from error
+    await SubscribeToPush(dependencies.open_unit_of_work, dependencies.clock).execute(
+        user.user_id, subscription
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/push-subscription", status_code=status.HTTP_204_NO_CONTENT)
+async def unsubscribe_from_push(
+    body: PushUnsubscriptionBody, user: CurrentUser, dependencies: Dependencies
+) -> Response:
+    await UnsubscribeFromPush(dependencies.open_unit_of_work).execute(user.user_id, body.endpoint)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
