@@ -28,6 +28,7 @@ Reglas que seguimos (Fowler):
 | **Integración** | Repositorios SQLAlchemy y consultas PostGIS | **Testcontainers** con Postgres + PostGIS reales; cada test en una transacción que se revierte | `tests/integration/persistence/` |
 | **Integración** | Adaptadores HTTP (portales, Resend, Web Push) | `respx` simula las respuestas HTTP; se verifican reintentos, rate limit y errores | `tests/integration/adapters/` |
 | **Integración** | API FastAPI | `httpx.AsyncClient` contra la app con DB real y auth simulada | `tests/integration/api/` |
+| **Integración** | **Autorización (IDOR)** | Por cada endpoint con recursos de usuario: el usuario B recibe 404 al acceder a lo del usuario A; sin token, 401 | `tests/integration/api/test_authorization.py` |
 | **Integración** | Migraciones Alembic | `upgrade head` y `downgrade` en una DB vacía | `tests/integration/migrations/` |
 
 ## 3. Frontend (Vitest + Testing Library)

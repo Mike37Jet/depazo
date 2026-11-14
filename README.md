@@ -11,6 +11,7 @@ PWA que automatiza la búsqueda de departamentos en arriendo en Quito, Ecuador. 
 - [Convenciones de código](docs/conventions.md)
 - [Estrategia de pruebas](docs/testing.md)
 - [Guía de UX/UI](docs/ux-guidelines.md) · [Sistema de diseño](docs/design-system.md)
+- [Seguridad y privacidad](docs/security.md) · [Reportar una vulnerabilidad](SECURITY.md)
 
 ## Stack
 

@@ -14,6 +14,7 @@ PWA multiusuario que automatiza la búsqueda de departamentos en arriendo en **Q
 | [docs/conventions.md](docs/conventions.md) | Escalabilidad, cero comentarios, nombres, commits |
 | [docs/testing.md](docs/testing.md) | Pirámide de tests |
 | [docs/ux-guidelines.md](docs/ux-guidelines.md) · [docs/design-system.md](docs/design-system.md) | UX/UI y tokens |
+| [docs/security.md](docs/security.md) | Modelo de amenazas, OWASP Top 10:2025, secretos, privacidad |
 | [docs/adr/](docs/adr/) | Decisiones y su porqué (nuevas con la skill `adr`) |
 
 **Repositorio público:** nunca commitear credenciales, tokens, cookies, `.env` ni datos personales.
@@ -110,9 +111,21 @@ Si las fuentes se contradicen, se aplica este orden de precedencia: **WCAG 2.2 A
 - Sin logos ni marcas de Apple.
 - Mobile-first (375 px) y estados de carga, vacío y error en todas las pantallas.
 
+## Seguridad (no negociable)
+
+Detalle en `docs/security.md`.
+- **Autorización en cada caso de uso:** toda consulta filtra por el `user_id` del token. RLS deny-by-default en Postgres como segunda barrera. Cada endpoint lleva un test que demuestra que el usuario B no puede acceder a lo del usuario A.
+- **JWT de Supabase validado** (firma JWKS, `aud`, `iss`, `exp`). La clave de servicio de Supabase y los demás secretos viven **solo en el backend**; nunca en `VITE_*` ni en el código.
+- **El contenido de los portales no es confiable:** se guarda como texto plano y nunca se renderiza como HTML (prohibido `dangerouslySetInnerHTML`). Los scrapers solo se conectan a los hosts de su allowlist (anti-SSRF).
+- SQL solo a través del ORM o con parámetros; nada de `eval` ni `subprocess` con datos externos.
+- Errores genéricos al cliente, sin trazas. Logs sin tokens, emails ni zonas.
+- Pydantic con `extra="forbid"` y límites en todos los inputs; rate limiting en la API.
+- El service worker no cachea respuestas autenticadas.
+- Antes de cambios grandes en auth, API o ingesta, correr la skill `/security-review`.
+
 ## Datos y scraping responsable
 
-- No se guardan datos personales de los anunciantes (teléfono, nombre, email): solo la URL del anuncio (LOPDP Ecuador).
+- No se guardan datos personales de los anunciantes (teléfono, nombre, email): solo la URL del anuncio (LOPDP Ecuador). Los usuarios pueden exportar sus datos y borrar su cuenta.
 - Respetar `robots.txt` y los términos de uso, usar rate limiting por portal y un User-Agent genérico, y preferir la API oficial. **No evadir protecciones anti-bot ni CAPTCHAs.** Si un portal lo prohíbe, se descarta.
 
 ## Flujo de trabajo (simple)
