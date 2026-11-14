@@ -15,6 +15,7 @@ PWA multiusuario que automatiza la búsqueda de departamentos en arriendo en **Q
 | [docs/testing.md](docs/testing.md) | Pirámide de tests |
 | [docs/ux-guidelines.md](docs/ux-guidelines.md) · [docs/design-system.md](docs/design-system.md) | UX/UI y tokens |
 | [docs/security.md](docs/security.md) | Modelo de amenazas, OWASP Top 10:2025, secretos, privacidad |
+| [docs/portals.md](docs/portals.md) | Verificación legal y técnica de cada portal |
 | [docs/adr/](docs/adr/) | Decisiones y su porqué (nuevas con la skill `adr`) |
 
 **Repositorio público:** nunca commitear credenciales, tokens, cookies, `.env` ni datos personales.

@@ -109,14 +109,7 @@ Se ejecuta cada hora con un cron de GitHub Actions; cada portal corre como un jo
 
 ## 8. Portales candidatos (Quito)
 
-Antes de implementar cada uno, verificar su disponibilidad, `robots.txt`, términos de uso y si tiene API oficial.
-
-| Portal | Método previsto | Notas |
-|---|---|---|
-| Mercado Libre Ecuador | **API oficial** (sitio `MEC`) | Primera opción: legal y estable |
-| Plusvalía | HTML | Portal líder; puede tener protección anti-bot |
-| OLX Ecuador | HTML / JSON interno | Verificar vigencia |
-| Vive1, iCasas | HTML | Verificar vigencia y volumen |
+**Verificado el 2026-11-13: ver [portals.md](portals.md) y el [ADR 0016](adr/0016-fuentes-de-datos.md) (propuesta).** Plusvalía, Properati, Vive1 y Mitula bloquean el acceso automatizado; iCasas y Arrienda y Vende lo prohíben en sus términos; OLX Ecuador cerró. Quedan como opciones: la API oficial de Mercado Libre (por confirmar), arriendos.ec (feed RSS, poco volumen) y el enfoque de **organizador personal** (el usuario comparte anuncios desde cualquier portal).
 
 **Política:** si un portal prohíbe el scraping o bloquea activamente el acceso automatizado, **no se evade**. Se busca un acuerdo o API oficial, o se descarta ese portal.
 
