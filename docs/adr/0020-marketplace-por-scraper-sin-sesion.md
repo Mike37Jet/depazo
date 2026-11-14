@@ -36,3 +36,13 @@ Plusvalía no cambia: sigue bloqueando a los clientes automatizados y solo entra
 - La cobertura es parcial: la vista sin sesión es una muestra. La extensión sigue siendo útil para lo que el dueño ve con su cuenta.
 - Facebook cambia su HTML con frecuencia. El parser busca los anuncios por la forma del dato y no por la ruta dentro del JSON, y los fixtures están en `backend/tests/fixtures/marketplace/`.
 - La excepción a `robots.txt` es de este adaptador. Cualquier otra fuente que la necesite requiere su propio ADR.
+
+## Actualización 2026-11-14: sondeo frecuente
+Un segundo LaunchAgent (`com.depazo.ingest.marketplace`) corre `scripts/scheduled_ingest.sh` solo para `marketplace`, **cada 20 minutos de 07:00 a 22:00 y con una sola petición** (`DEPAZO_SCHEDULED_PAGES=1`, la búsqueda `departamento arriendo`). Son unas 46 peticiones al día. El agente de 3 horas sigue pidiendo las tres páginas.
+
+Para sostener la regla de "si un sitio bloquea, el adaptador se detiene":
+- `depazo ingest` sale con el código `3` cuando la fuente bloquea (401, 403, 429) o deja de mostrar anuncios (cambio de formato o muro de inicio de sesión).
+- Ante ese código, el script crea `~/.config/depazo/blocked-<fuente>` y **no vuelve a pedir esa fuente durante 24 horas**. Borrar el archivo la reanuda antes.
+- El script se ejecuta bajo `lockf` (`~/.config/depazo/scheduled-ingest.lock`), así que los dos agentes nunca corren a la vez. Si el otro tarda más de 15 minutos, la ejecución se salta con el código `75`.
+
+Log en `~/Library/Logs/depazo/ingest-marketplace.log`. Para quitarlo: `launchctl bootout gui/$(id -u)/com.depazo.ingest.marketplace` y borrar el plist de `~/Library/LaunchAgents/`. Si la Mac está apagada o dormida no hay sondeo; al despertar, launchd corre una sola vez las ejecuciones perdidas.
