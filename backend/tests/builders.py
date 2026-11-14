@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Any
 
 from depazo.domain.listing import GeoPoint, Listing
+from depazo.domain.search_profile import SearchProfile
 
 DEFAULT_LISTING = Listing(
     source="test-source",
@@ -24,3 +25,10 @@ DEFAULT_LISTING = Listing(
 
 def a_listing(**overrides: Any) -> Listing:
     return replace(DEFAULT_LISTING, **overrides)
+
+
+DEFAULT_PROFILE = SearchProfile(max_monthly_cost_usd=Decimal(1000))
+
+
+def a_profile(**overrides: Any) -> SearchProfile:
+    return replace(DEFAULT_PROFILE, **overrides)
