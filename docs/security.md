@@ -49,7 +49,8 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 - Dependencia `current_user` que valida el JWT (JWKS en caché, `aud = authenticated`, `iss` de nuestro proyecto, `exp`).
 - **Autorización en los casos de uso.** Los repositorios reciben el `user_id` y filtran siempre por él.
 - Schemas Pydantic con `extra="forbid"`, límites de longitud y rangos (por ejemplo, polígonos de zona con un número máximo de vértices).
-- Rate limiting (slowapi o el de Cloudflare) y tamaño máximo del body.
+- Rate limiting por usuario (v1: en memoria, por instancia; con varias instancias pasa al de Cloudflare) y body de máximo 16 KiB (413; sin `Content-Length` responde 411).
+- `/openapi.json` y `/docs` apagados salvo `DEPAZO_IS_OPENAPI_PUBLISHED=true`. Los 422 no repiten el input recibido.
 - Middleware de headers de seguridad y CORS con una lista explícita de orígenes.
 
 ### Ingesta (scrapers)
