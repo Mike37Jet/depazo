@@ -33,6 +33,7 @@ PWA multiusuario que automatiza la búsqueda de departamentos en arriendo en **Q
 | Frontend (PWA) | Vite, React, TypeScript strict, TanStack Router/Query, Tailwind + shadcn/ui, vite-plugin-pwa, MapLibre, Motion · Atomic Design + Storybook · pnpm · Biome · Vitest + Testing Library + MSW · Playwright |
 | Backend / API | Python 3.13, Clean Architecture, FastAPI, Pydantic v2, SQLAlchemy 2 async, Alembic · uv · Ruff · mypy strict · pytest + Hypothesis + Testcontainers + respx |
 | Ingesta | CLI `depazo ingest` (Typer), httpx + selectolax; Playwright solo si es imprescindible |
+| Extensión (captura asistida) | Chrome MV3, TypeScript strict, esbuild, Zod (`zod/mini`), Biome, Vitest + happy-dom |
 | Datos / Auth | Supabase: Postgres + PostGIS, Supabase Auth (la API valida el JWT) |
 | Notificaciones | Web Push (VAPID, pywebpush), email con Resend |
 | Infra (free tiers) | Cloudflare Pages (web), Cloud Run (API), GitHub Actions (CI + cron de ingesta), Sentry |
@@ -51,6 +52,8 @@ frontend/src/
   components/{atoms,molecules,organisms,templates}/
   pages/  routes/  hooks/  api/ (generado, no editar)
 frontend/e2e/
+extension/src/{capture,sources/<portal>,content,popup}/   public/ (manifest, popup.html)
+extension/tests/{sources,capture,contract,fixtures}/
 docs/  .github/workflows/
 ```
 
@@ -65,6 +68,9 @@ Backend (desde `backend/`):
 | Lint y formato | `uv run ruff check --fix` · `uv run ruff format` |
 | Tipos | `uv run mypy src tests` |
 | Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json]` |
+| Importar captura | `uv run depazo import <archivo.json>` |
+
+Extensión (desde `extension/`): `pnpm install`, `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` (genera `dist/`, que se carga en `chrome://extensions` → "Cargar descomprimida").
 
 Frontend (previstos): `pnpm dev`, `pnpm test`, `pnpm e2e`, `pnpm gen:api`.
 

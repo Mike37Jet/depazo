@@ -2,7 +2,7 @@
 
 PWA que automatiza la búsqueda de departamentos en arriendo en Quito, Ecuador. Recopila anuncios de varios portales inmobiliarios, calcula qué tan compatible es cada uno con tus preferencias (presupuesto, zona, habitaciones, características) y te avisa cuando aparece una buena oportunidad.
 
-> Estado: diseño y arquitectura definidos; implementación por comenzar.
+> Estado: primeros colectores funcionando (scraper de iCasas y extensión de captura para Plusvalía); API, base de datos y PWA por construir.
 
 ## Documentación
 
@@ -17,6 +17,24 @@ PWA que automatiza la búsqueda de departamentos en arriendo en Quito, Ecuador. 
 
 PWA con React + TypeScript · API con FastAPI (Python) · Supabase (Postgres + PostGIS + Auth) · GitHub Actions · Cloudflare Pages · Cloud Run.
 
-## Scraping responsable
+## Fuentes de datos
 
-depazo respeta `robots.txt` y los términos de uso de cada portal, limita la frecuencia de sus peticiones, prefiere las APIs oficiales y no guarda datos personales de los anunciantes.
+Proyecto personal y experimental, sin fines comerciales ([ADR 0016](docs/adr/0016-fuentes-de-datos.md)):
+
+- **Scraper** para sitios públicos sin protección técnica (iCasas), con baja frecuencia, `robots.txt` respetado y un User-Agent identificable. Si un sitio bloquea, el colector se detiene.
+- **Extensión de navegador** para Plusvalía: guarda los anuncios que tú ves mientras navegas con tu propia sesión. No hay bots en esos sitios.
+- Nunca se evaden protecciones técnicas ni se guardan datos personales de los anunciantes.
+
+## Probar la extensión
+
+```bash
+cd extension && pnpm install && pnpm build
+```
+
+1. Abre `chrome://extensions`, activa el modo desarrollador y elige **Cargar descomprimida** → `extension/dist`.
+2. Navega por los resultados de arriendo de Plusvalía en Quito; los anuncios se guardan solos.
+3. Abre la extensión, pulsa **Exportar JSON** e impórtalo:
+
+```bash
+cd backend && uv run depazo import ~/Downloads/depazo-captura-AAAA-MM-DD.json
+```

@@ -42,6 +42,7 @@ flowchart LR
 | **Frontend (PWA)** | Vite + React + TypeScript, TanStack Router/Query, Tailwind + shadcn/ui, vite-plugin-pwa, MapLibre | Login, configurar búsquedas (dibujar zona en mapa), ver ranking, favoritos, suscripción a push |
 | **API** | Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic | CRUD de perfiles de búsqueda, listar matches, registrar suscripciones push |
 | **Ingesta (worker)** | Mismo paquete Python, CLI `depazo ingest` | Recolectar → normalizar → deduplicar → guardar → puntuar → notificar |
+| **Extensión de navegador** | Chrome MV3, TypeScript, esbuild, Zod (mini) | Captura los anuncios que el usuario ve en Plusvalía (luego Marketplace y Properati). v1: los guarda en `chrome.storage.local` y los exporta a un JSON `depazo.capture` que se importa con `depazo import`. Cuando exista la API, los enviará a la cuenta del usuario |
 | **Base de datos** | Supabase Postgres + PostGIS | Datos de negocio + consultas geoespaciales |
 | **Auth** | Supabase Auth (magic link + Google) | Identidad; la API valida el JWT con el JWKS de Supabase |
 | **Notificaciones** | Web Push (`pywebpush`, VAPID) + email (Resend) | Alertas inmediatas y resumen diario |
