@@ -21,10 +21,20 @@ export default defineConfig({
         display: "standalone",
         background_color: "#F2F2F7",
         theme_color: "#F2F2F7",
-        icons: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
+        icons: [
+          { src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+          { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          {
+            src: "icon-maskable-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,webmanifest}"],
+        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [],
         importScripts: ["push-handler.js"],
