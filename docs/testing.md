@@ -25,7 +25,7 @@ Reglas que seguimos (Fowler):
 | **Unitario** | `domain/`: entidades, value objects, puntaje, dedupe | Funciones puras. Puntaje con *property-based testing* (Hypothesis): el resultado siempre está entre 0 y 100, y si falla un filtro duro, el puntaje es 0 | `tests/unit/domain/` |
 | **Unitario** | `application/`: casos de uso | Fakes en memoria de los puertos (`InMemoryListingRepository`, `FakeNotifier`, `FixedClock`) | `tests/unit/application/` |
 | **Unitario** | Parsers de cada portal | HTML/JSON real guardado en fixtures; sin red | `tests/unit/sources/` + `tests/fixtures/<portal>/` |
-| **Integración** | Repositorios SQLAlchemy y consultas PostGIS | **Testcontainers** con Postgres + PostGIS reales; cada test en una transacción que se revierte | `tests/integration/persistence/` |
+| **Integración** | Repositorios SQLAlchemy y consultas PostGIS | **Testcontainers** con Postgres + PostGIS reales y las migraciones de Alembic aplicadas; las tablas se vacían antes de cada test (la unidad de trabajo hace commit de verdad) | `tests/integration/persistence/` |
 | **Integración** | Adaptadores HTTP (portales, Resend, Web Push) | `respx` simula las respuestas HTTP; se verifican reintentos, rate limit y errores | `tests/integration/adapters/` |
 | **Integración** | API FastAPI | `httpx.AsyncClient` contra la app con DB real y auth simulada | `tests/integration/api/` |
 | **Integración** | **Autorización (IDOR)** | Por cada endpoint con recursos de usuario: el usuario B recibe 404 al acceder a lo del usuario A; sin token, 401 | `tests/integration/api/test_authorization.py` |
@@ -71,6 +71,6 @@ El cliente TS se genera desde el OpenAPI de FastAPI. En CI se regenera el client
 | Comando | Qué corre |
 |---|---|
 | `uv run pytest tests/unit` | Unitarios del backend |
-| `uv run pytest tests/integration` | Integración (requiere Docker) |
+| `uv run pytest tests/integration` | Integración (requiere Docker; sin Docker, los tests de persistencia se saltan). En Apple Silicon: `DEPAZO_TEST_POSTGIS_IMAGE=imresamu/postgis:17-3.5`, porque `postgis/postgis` no publica imágenes arm64. Con Colima: `DOCKER_HOST=unix://$HOME/.colima/<perfil>/docker.sock` y `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock` |
 | `pnpm test` | Unitarios e integración del frontend |
 | `pnpm e2e` | Playwright |
