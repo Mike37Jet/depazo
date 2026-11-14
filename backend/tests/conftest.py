@@ -18,3 +18,13 @@ def browser_capture_path() -> Path:
 @pytest.fixture
 def arriendos_ec_feed_xml() -> str:
     return (FIXTURES_DIRECTORY / "arriendos_ec" / "feed.xml").read_text(encoding="utf-8")
+
+
+@pytest.fixture
+def marketplace_category_html() -> str:
+    return (FIXTURES_DIRECTORY / "marketplace" / "category_page.html").read_text(encoding="utf-8")
+
+
+@pytest.fixture
+def marketplace_search_html() -> str:
+    return (FIXTURES_DIRECTORY / "marketplace" / "search_page.html").read_text(encoding="utf-8")

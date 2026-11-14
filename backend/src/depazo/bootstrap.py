@@ -34,6 +34,7 @@ from depazo.infrastructure.profiles.profile_file import InvalidProfileFileError,
 from depazo.infrastructure.sources.arriendos_ec import source as arriendos_ec
 from depazo.infrastructure.sources.capture.capture_file import CapturedFileListingSource
 from depazo.infrastructure.sources.icasas import source as icasas
+from depazo.infrastructure.sources.marketplace import source as marketplace
 from depazo.presentation.api.app import create_app
 from depazo.presentation.api.dependencies import ApiDependencies
 from depazo.presentation.api.rate_limit import InMemoryRateLimiter
@@ -78,9 +79,21 @@ async def _arriendos_ec_source() -> AsyncIterator[ListingSource]:
         yield arriendos_ec.ArriendosEcListingSource(client)
 
 
+@asynccontextmanager
+async def _marketplace_source() -> AsyncIterator[ListingSource]:
+    async with PoliteHttpClient(
+        marketplace.ALLOWED_HOSTS,
+        marketplace.MIN_INTERVAL_SECONDS,
+        should_respect_robots=marketplace.SHOULD_RESPECT_ROBOTS,
+        extra_headers=marketplace.NAVIGATION_HEADERS,
+    ) as client:
+        yield marketplace.MarketplaceListingSource(client)
+
+
 SOURCE_FACTORIES: dict[str, Callable[[], AbstractAsyncContextManager[ListingSource]]] = {
     "icasas": _icasas_source,
     "arriendos_ec": _arriendos_ec_source,
+    "marketplace": _marketplace_source,
 }
 
 
