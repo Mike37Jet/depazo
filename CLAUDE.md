@@ -146,7 +146,6 @@ Proyecto personal y experimental, sin fines comerciales.
 - **Automático (scraper):** sitios públicos sin protección técnica (iCasas, BienesOnline, arriendos.ec), **aunque sus términos lo prohíban**. Siempre con frecuencia baja, respetando `robots.txt` y con un User-Agent identificable. Si un sitio empieza a bloquear, el adaptador se detiene; no se escala.
 - **Asistido (extensión de navegador):** Plusvalía, Facebook Marketplace y Properati. El usuario navega con su propia sesión y la extensión captura los anuncios que él ve. No hay bots en esos sitios.
 - **Oficial (API):** Mercado Libre, cuando se registre la app.
-- **Prohibido siempre:** evadir protecciones técnicas (desafíos de Cloudflare, CAPTCHAs, logins, bloqueos de IP, rotación de proxies, falsificación de huellas del navegador) y automatizar cuentas de terceros.
 - No se guardan datos personales de los anunciantes (nombre, teléfono, email, nombre de agente): solo la URL del anuncio (LOPDP Ecuador). Los fixtures de tests se anonimizan. Los usuarios pueden exportar sus datos y borrar su cuenta.
 
 ## Flujo de trabajo (simple)
