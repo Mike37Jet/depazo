@@ -12,8 +12,18 @@ from depazo.infrastructure.persistence.database import (
     database_url_from_environment,
 )
 from depazo.infrastructure.persistence.unit_of_work import SqlAlchemyUnitOfWork
+from depazo.infrastructure.profiles.profile_file import InvalidProfileFileError, load_search_profile
 from depazo.infrastructure.sources.capture.capture_file import CapturedFileListingSource
 from depazo.infrastructure.sources.icasas import source as icasas
+
+__all__ = [
+    "InvalidProfileFileError",
+    "UnknownSourceError",
+    "load_search_profile",
+    "open_capture_file_source",
+    "open_listing_source",
+    "open_unit_of_work_factory",
+]
 
 
 class UnknownSourceError(ValueError):

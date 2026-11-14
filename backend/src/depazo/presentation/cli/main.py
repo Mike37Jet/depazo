@@ -13,17 +13,23 @@ import typer
 
 from depazo.application.ports.listing_source import ListingSource, SourceUnavailableError
 from depazo.application.use_cases.collect_listings import CollectionReport, CollectListings
+from depazo.application.use_cases.rank_listings import RankedListing, RankingReport, RankListings
 from depazo.application.use_cases.record_listings import RecordingSummary, RecordListings
 from depazo.bootstrap import (
+    InvalidProfileFileError,
     UnknownSourceError,
+    load_search_profile,
     open_capture_file_source,
     open_listing_source,
     open_unit_of_work_factory,
 )
 from depazo.domain.listing import Listing
+from depazo.domain.scoring import monthly_cost_usd
+from depazo.domain.search_profile import SearchProfile
 from depazo.infrastructure.persistence.database import DatabaseNotConfiguredError
 
 MAX_PAGES_PER_RUN = 20
+MAX_MATCHES_SHOWN = 200
 
 app = typer.Typer(no_args_is_help=True, help="depazo: rental apartment finder for Quito.")
 
@@ -61,6 +67,54 @@ def import_capture(
     save: SaveOption = False,
 ) -> None:
     _collect_and_print(lambda: open_capture_file_source(capture_file), 1, output, save)
+
+
+@app.command(help="Rank saved listings against a search profile.")
+def match(
+    profile_file: Annotated[Path, typer.Option("--profile", help="Search profile JSON file.")],
+    limit: Annotated[int, typer.Option(min=1, max=MAX_MATCHES_SHOWN)] = 20,
+    output: Annotated[OutputFormat, typer.Option()] = OutputFormat.TABLE,
+) -> None:
+    try:
+        profile = load_search_profile(profile_file)
+        report = asyncio.run(_rank(profile))
+    except (InvalidProfileFileError, DatabaseNotConfiguredError) as error:
+        typer.secho(str(error), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from error
+    shown = report.matches[:limit]
+    if output is OutputFormat.JSON:
+        typer.echo(json.dumps([_match_as_dict(match) for match in shown], default=str))
+    else:
+        _print_ranking(report, shown, profile)
+
+
+async def _rank(profile: SearchProfile) -> RankingReport:
+    async with open_unit_of_work_factory() as open_unit_of_work:
+        return await RankListings(open_unit_of_work).execute(profile)
+
+
+def _match_as_dict(match: RankedListing) -> dict[str, object]:
+    return {
+        "score": match.result.total,
+        "breakdown": {item.criterion.value: item.value for item in match.result.breakdown},
+        "listing": asdict(match.listing),
+    }
+
+
+def _print_ranking(
+    report: RankingReport, shown: tuple[RankedListing, ...], profile: SearchProfile
+) -> None:
+    typer.echo(
+        f"{len(report.matches)} matches out of {report.evaluated_count} listings "
+        f"({report.rejected_count} failed the hard filters)"
+    )
+    for match in shown:
+        cost = _format_amount(monthly_cost_usd(match.listing, profile), prefix="$")
+        breakdown = " · ".join(
+            f"{item.criterion.value} {item.value:.2f}" for item in match.result.breakdown
+        )
+        typer.echo(f"{match.result.total:>3}  {cost:>8}  {_describe(match.listing)}")
+        typer.echo(f"     {breakdown}")
 
 
 def _collect_and_print(
@@ -118,10 +172,14 @@ def _print_table(report: CollectionReport) -> None:
 
 def _format_row(listing: Listing) -> str:
     rent = _format_amount(listing.monthly_rent_usd, prefix="$")
+    return f"{rent:>8}  {_describe(listing)}"
+
+
+def _describe(listing: Listing) -> str:
     area = _format_amount(listing.area_m2, suffix=" m²")
     rooms = f"{listing.bedrooms if listing.bedrooms is not None else '?'} hab"
     place = listing.neighborhood or listing.city or "?"
-    return f"{rent:>8}  {area:>9}  {rooms:>6}  {place:<22.22}  {listing.url}"
+    return f"{area:>9}  {rooms:>6}  {place:<22.22}  {listing.url}"
 
 
 def _format_amount(amount: Decimal | None, prefix: str = "", suffix: str = "") -> str:
