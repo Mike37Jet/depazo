@@ -6,7 +6,14 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from depazo.application.ports.listing_repository import UnitOfWork
 from depazo.application.ports.listing_source import ListingSource
+from depazo.application.ports.notifier import Notifier
 from depazo.infrastructure.http.polite_client import PoliteHttpClient
+from depazo.infrastructure.notifications.resend_notifier import (
+    EmailAlertSettings,
+    NotificationsNotConfiguredError,
+    ResendEmailNotifier,
+    email_alert_settings_from_environment,
+)
 from depazo.infrastructure.persistence.database import (
     create_database_engine,
     database_url_from_environment,
@@ -17,10 +24,14 @@ from depazo.infrastructure.sources.capture.capture_file import CapturedFileListi
 from depazo.infrastructure.sources.icasas import source as icasas
 
 __all__ = [
+    "EmailAlertSettings",
     "InvalidProfileFileError",
+    "NotificationsNotConfiguredError",
     "UnknownSourceError",
+    "email_alert_settings_from_environment",
     "load_search_profile",
     "open_capture_file_source",
+    "open_email_notifier",
     "open_listing_source",
     "open_unit_of_work_factory",
 ]
@@ -63,3 +74,9 @@ async def open_unit_of_work_factory() -> AsyncIterator[Callable[[], UnitOfWork]]
         yield lambda: SqlAlchemyUnitOfWork(session_factory)
     finally:
         await engine.dispose()
+
+
+@asynccontextmanager
+async def open_email_notifier(settings: EmailAlertSettings) -> AsyncIterator[Notifier]:
+    async with ResendEmailNotifier(settings) as notifier:
+        yield notifier

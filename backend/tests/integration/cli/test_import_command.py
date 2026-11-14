@@ -35,3 +35,31 @@ def test_asks_for_a_database_url_before_saving(
 
     assert result.exit_code == 1
     assert "DEPAZO_DATABASE_URL" in result.stderr
+
+
+def test_requires_save_to_send_alerts(browser_capture_path: Path, tmp_path: Path) -> None:
+    profile = tmp_path / "profile.json"
+    profile.write_text('{"max_monthly_cost_usd": 900}', encoding="utf-8")
+
+    result = runner.invoke(
+        app, ["import", str(browser_capture_path), "--alert-profile", str(profile)]
+    )
+
+    assert result.exit_code == 1
+    assert "--save" in result.stderr
+
+
+def test_checks_email_settings_before_collecting(
+    browser_capture_path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.delenv("DEPAZO_DATABASE_URL", raising=False)
+    profile = tmp_path / "profile.json"
+    profile.write_text('{"max_monthly_cost_usd": 900}', encoding="utf-8")
+
+    result = runner.invoke(
+        app, ["import", str(browser_capture_path), "--save", "--alert-profile", str(profile)]
+    )
+
+    assert result.exit_code == 1
+    assert "RESEND_API_KEY" in result.stderr

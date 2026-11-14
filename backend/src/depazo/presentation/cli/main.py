@@ -2,7 +2,7 @@ import asyncio
 import json
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -11,15 +11,22 @@ from typing import Annotated
 
 import typer
 
+from depazo.application.dto.listing_alert import ListingAlert
 from depazo.application.ports.listing_source import ListingSource, SourceUnavailableError
+from depazo.application.ports.notifier import NotificationFailedError
+from depazo.application.use_cases.alert_matching_listings import AlertMatchingListings
 from depazo.application.use_cases.collect_listings import CollectionReport, CollectListings
 from depazo.application.use_cases.rank_listings import RankedListing, RankingReport, RankListings
 from depazo.application.use_cases.record_listings import RecordingSummary, RecordListings
 from depazo.bootstrap import (
+    EmailAlertSettings,
     InvalidProfileFileError,
+    NotificationsNotConfiguredError,
     UnknownSourceError,
+    email_alert_settings_from_environment,
     load_search_profile,
     open_capture_file_source,
+    open_email_notifier,
     open_listing_source,
     open_unit_of_work_factory,
 )
@@ -48,6 +55,26 @@ SourceOpener = Callable[[], AbstractAsyncContextManager[ListingSource]]
 SaveOption = Annotated[
     bool, typer.Option("--save", help="Store listings in the database (DEPAZO_DATABASE_URL).")
 ]
+AlertProfileOption = Annotated[
+    Path | None,
+    typer.Option(
+        "--alert-profile",
+        help="Email new or repriced listings that match this profile (needs --save).",
+    ),
+]
+
+
+@dataclass(frozen=True, slots=True)
+class AlertPlan:
+    profile: SearchProfile
+    settings: EmailAlertSettings
+
+
+@dataclass(frozen=True, slots=True)
+class CollectionOutcome:
+    report: CollectionReport
+    summary: RecordingSummary | None
+    alerts: tuple[ListingAlert, ...]
 
 
 @app.command(help="Collect listings from a source and print them.")
@@ -56,8 +83,9 @@ def ingest(
     pages: Annotated[int, typer.Option(min=1, max=MAX_PAGES_PER_RUN)] = 1,
     output: Annotated[OutputFormat, typer.Option()] = OutputFormat.TABLE,
     save: SaveOption = False,
+    alert_profile: AlertProfileOption = None,
 ) -> None:
-    _collect_and_print(lambda: open_listing_source(source), pages, output, save)
+    _collect_and_print(lambda: open_listing_source(source), pages, output, save, alert_profile)
 
 
 @app.command(name="import", help="Import listings captured with the browser extension.")
@@ -65,8 +93,11 @@ def import_capture(
     capture_file: Annotated[Path, typer.Argument(help="JSON file exported by the extension.")],
     output: Annotated[OutputFormat, typer.Option()] = OutputFormat.TABLE,
     save: SaveOption = False,
+    alert_profile: AlertProfileOption = None,
 ) -> None:
-    _collect_and_print(lambda: open_capture_file_source(capture_file), 1, output, save)
+    _collect_and_print(
+        lambda: open_capture_file_source(capture_file), 1, output, save, alert_profile
+    )
 
 
 @app.command(help="Rank saved listings against a search profile.")
@@ -118,34 +149,70 @@ def _print_ranking(
 
 
 def _collect_and_print(
-    open_source: SourceOpener, pages: int, output: OutputFormat, should_save: bool
+    open_source: SourceOpener,
+    pages: int,
+    output: OutputFormat,
+    should_save: bool,
+    alert_profile_file: Path | None,
 ) -> None:
     try:
-        report, summary = asyncio.run(_collect(open_source, pages, should_save))
-    except (UnknownSourceError, SourceUnavailableError, DatabaseNotConfiguredError) as error:
+        alert_plan = _alert_plan(alert_profile_file, should_save)
+        outcome = asyncio.run(_collect(open_source, pages, should_save, alert_plan))
+    except NotificationFailedError as error:
+        typer.secho(
+            f"listings were saved but the alert email failed: {error}",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1) from error
+    except (
+        UnknownSourceError,
+        SourceUnavailableError,
+        DatabaseNotConfiguredError,
+        InvalidProfileFileError,
+        NotificationsNotConfiguredError,
+    ) as error:
         typer.secho(str(error), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from error
+    report = outcome.report
     if output is OutputFormat.JSON:
         typer.echo(json.dumps([asdict(listing) for listing in report.listings], default=str))
     else:
         _print_table(report)
-    if summary is not None:
-        _print_summary(summary)
+    if outcome.summary is not None:
+        _print_summary(outcome.summary)
+    if alert_plan is not None:
+        typer.secho(f"alerted: {len(outcome.alerts)} listings", fg=typer.colors.GREEN, err=True)
     if report.was_blocked:
         typer.secho(f"{report.source} blocked the collector; stopped.", fg=typer.colors.YELLOW)
 
 
-async def _collect(
-    open_source: SourceOpener, pages: int, should_save: bool
-) -> tuple[CollectionReport, RecordingSummary | None]:
+def _alert_plan(alert_profile_file: Path | None, should_save: bool) -> AlertPlan | None:
+    if alert_profile_file is None:
+        return None
     if not should_save:
-        return await _collect_only(open_source, pages), None
+        raise InvalidProfileFileError("--alert-profile needs --save to know which listings are new")
+    return AlertPlan(
+        profile=load_search_profile(alert_profile_file),
+        settings=email_alert_settings_from_environment(),
+    )
+
+
+async def _collect(
+    open_source: SourceOpener, pages: int, should_save: bool, alert_plan: AlertPlan | None
+) -> CollectionOutcome:
+    if not should_save:
+        return CollectionOutcome(await _collect_only(open_source, pages), None, ())
     async with open_unit_of_work_factory() as open_unit_of_work:
         report = await _collect_only(open_source, pages)
         summary = await RecordListings(open_unit_of_work, lambda: datetime.now(UTC)).execute(
             report.listings
         )
-    return report, summary
+    if alert_plan is None:
+        return CollectionOutcome(report, summary, ())
+    async with open_email_notifier(alert_plan.settings) as notifier:
+        alerts = await AlertMatchingListings(notifier).execute(summary, alert_plan.profile)
+    return CollectionOutcome(report, summary, alerts)
 
 
 async def _collect_only(open_source: SourceOpener, pages: int) -> CollectionReport:
