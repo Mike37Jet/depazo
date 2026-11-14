@@ -26,7 +26,9 @@ const MAX_ROOMS = 20;
 const MAX_AREA = 2000;
 const MAX_SCORE = 100;
 
-export function toFormValues(profile: SearchProfile | null): SearchProfileFormValues {
+export function toFormValues(
+  profile: Omit<SearchProfile, "weights"> | null,
+): SearchProfileFormValues {
   return {
     maxMonthlyCost: profile ? String(profile.max_monthly_cost_usd) : "",
     minMonthlyCost: asText(profile?.min_monthly_cost_usd),

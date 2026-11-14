@@ -3,12 +3,14 @@ import type { DepazoApi } from "./api-client";
 import type { AppInstaller } from "./app-installer";
 import type { AuthGateway } from "./auth-gateway";
 import type { PushGateway } from "./push-gateway";
+import type { ShareGateway } from "./share-gateway";
 
 export interface AppServices {
   auth: AuthGateway;
   api: DepazoApi;
   push: PushGateway;
   installer: AppInstaller;
+  share: ShareGateway;
 }
 
 const ServicesContext = createContext<AppServices | null>(null);

@@ -19,6 +19,7 @@ import {
 
 export interface SearchProfileFormProps {
   profile: SearchProfile | null;
+  draft?: Omit<SearchProfile, "weights"> | undefined;
   isSaving: boolean;
   status: { tone: "success" | "error"; message: string } | null;
   neighborhoodOptions?: PlaceOption[] | undefined;
@@ -36,12 +37,15 @@ type TextField =
 
 export function SearchProfileForm({
   profile,
+  draft,
   isSaving,
   status,
   neighborhoodOptions,
   onSave,
 }: SearchProfileFormProps) {
-  const [values, setValues] = useState<SearchProfileFormValues>(() => toFormValues(profile));
+  const [values, setValues] = useState<SearchProfileFormValues>(() =>
+    toFormValues(draft ?? profile),
+  );
   const [errors, setErrors] = useState<SearchProfileFormErrors>({});
   const formId = useId();
   const [isStatusVisible, setIsStatusVisible] = useState(false);

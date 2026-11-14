@@ -4,6 +4,7 @@ import { createContext, useContext } from "react";
 import type { TabItem } from "../components/organisms/tab-bar";
 import { AppShell } from "../components/templates/app-shell";
 import { useSession } from "../hooks/use-session";
+import { useKeepSharedSearchThroughSignIn } from "../hooks/use-shared-search";
 import type { Session } from "../services/auth-gateway";
 import { SignInPage } from "./sign-in-page";
 
@@ -26,6 +27,9 @@ export function useSignedInSession(): Session {
 
 export function AppRoot() {
   const state = useSession();
+  useKeepSharedSearchThroughSignIn(
+    state.status === "loading" ? null : state.status === "signed-in",
+  );
   if (state.status === "loading") {
     return <div role="status" aria-label="Cargando" className="min-h-dvh" />;
   }

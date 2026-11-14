@@ -1,8 +1,11 @@
 import { screen } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
+import { encodeSharedSearch, readSharedSearchToken } from "../format/shared-search";
 import type { SearchProfileInput } from "../services/api-client";
 import { SAVED_PROFILE } from "../test/api-fixtures";
+import { FakeAuthGateway, SIGNED_IN } from "../test/fake-auth-gateway";
+import { FakeShareGateway } from "../test/fake-share-gateway";
 import { renderApp } from "../test/render-app";
 import { API_BASE_URL, server } from "../test/server";
 
@@ -111,5 +114,118 @@ describe("SearchProfilePage", () => {
 
     expect(screen.getByText("Elige un sector de la lista.")).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Preferidos agregados" })).not.toBeInTheDocument();
+  });
+
+  describe("sharing", () => {
+    const SHARED = {
+      ...SAVED_PROFILE,
+      max_monthly_cost_usd: 650,
+      max_bedrooms: 3,
+      preferred_neighborhoods: ["Cumbayá"],
+    };
+
+    function renderWithShare(path: string, share: FakeShareGateway) {
+      return renderApp(path, new FakeAuthGateway(SIGNED_IN), undefined, undefined, share);
+    }
+
+    it("shares the saved search as a link to this screen", async () => {
+      server.use(
+        http.get(`${API_BASE_URL}/me/search-profile`, () => HttpResponse.json(SAVED_PROFILE)),
+      );
+      const share = new FakeShareGateway("shared");
+      const { user } = renderWithShare("/busqueda", share);
+
+      await user.click(await screen.findByRole("button", { name: "Compartir búsqueda" }));
+
+      const [link] = share.sharedLinks;
+      expect(link?.path.startsWith("/busqueda#")).toBe(true);
+      expect(readSharedSearchToken(link?.path.split("#")[1] ?? "")).toBe(
+        encodeSharedSearch(SAVED_PROFILE),
+      );
+    });
+
+    it("tells the user when the link was copied instead of shared", async () => {
+      server.use(
+        http.get(`${API_BASE_URL}/me/search-profile`, () => HttpResponse.json(SAVED_PROFILE)),
+      );
+      const { user } = renderWithShare("/busqueda", new FakeShareGateway("copied"));
+
+      await user.click(await screen.findByRole("button", { name: "Compartir búsqueda" }));
+
+      expect(await screen.findByRole("status")).toHaveTextContent("Enlace copiado");
+    });
+
+    it("does not offer to share before a search is saved", async () => {
+      server.use(
+        http.get(
+          `${API_BASE_URL}/me/search-profile`,
+          () => new HttpResponse(null, { status: 404 }),
+        ),
+      );
+      renderApp("/busqueda");
+
+      expect(await screen.findByLabelText("Máximo al mes (USD)")).toHaveValue("");
+      expect(screen.queryByRole("button", { name: "Compartir búsqueda" })).not.toBeInTheDocument();
+    });
+
+    it("prefills a received search and saves it over the current one", async () => {
+      let saved: SearchProfileInput | null = null;
+      server.use(
+        http.get(`${API_BASE_URL}/me/search-profile`, () => HttpResponse.json(SAVED_PROFILE)),
+        http.put(`${API_BASE_URL}/me/search-profile`, async ({ request }) => {
+          saved = (await request.json()) as SearchProfileInput;
+          return HttpResponse.json(SHARED);
+        }),
+      );
+      const { user } = renderApp(`/busqueda#compartida=${encodeSharedSearch(SHARED)}`);
+
+      expect(await screen.findByRole("heading", { name: /compartieron/ })).toBeInTheDocument();
+      expect(screen.getByLabelText("Máximo al mes (USD)")).toHaveValue("650");
+      expect(screen.getByLabelText("Habitaciones máximas")).toHaveValue("3");
+      await user.click(screen.getByRole("button", { name: "Guardar búsqueda" }));
+
+      expect(await screen.findByRole("status")).toHaveTextContent("Búsqueda guardada");
+      expect(saved).toMatchObject({
+        max_monthly_cost_usd: 650,
+        max_bedrooms: 3,
+        preferred_neighborhoods: ["Cumbayá"],
+        weights: SAVED_PROFILE.weights,
+      });
+      expect(screen.queryByRole("heading", { name: /compartieron/ })).not.toBeInTheDocument();
+    });
+
+    it("goes back to the own search when the received one is discarded", async () => {
+      server.use(
+        http.get(`${API_BASE_URL}/me/search-profile`, () => HttpResponse.json(SAVED_PROFILE)),
+      );
+      const { user } = renderApp(`/busqueda#compartida=${encodeSharedSearch(SHARED)}`);
+
+      await user.click(await screen.findByRole("button", { name: "Descartar y ver la mía" }));
+
+      expect(await screen.findByLabelText("Máximo al mes (USD)")).toHaveValue("900");
+      expect(screen.queryByRole("heading", { name: /compartieron/ })).not.toBeInTheDocument();
+    });
+
+    it("explains a broken link and keeps the own search", async () => {
+      server.use(
+        http.get(`${API_BASE_URL}/me/search-profile`, () => HttpResponse.json(SAVED_PROFILE)),
+      );
+      renderApp("/busqueda#compartida=roto");
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("no es válido");
+      expect(screen.getByLabelText("Máximo al mes (USD)")).toHaveValue("900");
+    });
+
+    it("opens a search received before signing in once the session starts", async () => {
+      sessionStorage.setItem("depazo-pending-shared-search", encodeSharedSearch(SHARED));
+      server.use(
+        http.get(`${API_BASE_URL}/me/search-profile`, () => HttpResponse.json(SAVED_PROFILE)),
+        http.get(`${API_BASE_URL}/me/matches`, () => HttpResponse.json({ matches: [] })),
+      );
+      renderApp("/");
+
+      expect(await screen.findByRole("heading", { name: /compartieron/ })).toBeInTheDocument();
+      expect(sessionStorage.getItem("depazo-pending-shared-search")).toBeNull();
+    });
   });
 });
