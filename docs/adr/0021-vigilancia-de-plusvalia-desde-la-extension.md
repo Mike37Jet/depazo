@@ -82,3 +82,12 @@ Es la regla del proyecto ("si un sitio bloquea, el adaptador se detiene; no se e
 - Apagar el interruptor en el popup y cerrar la pestaña fijada: con eso no hay más recargas ni entregas.
 - Borrar `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.depazo.capture.json`: sin ese archivo Chrome no puede lanzar el host.
 - La captura mientras se navega y la exportación manual siguen funcionando igual.
+
+## Actualización 2026-11-14: puesta al día con anuncios anteriores
+La vigilancia solo leía la primera página (los 30 más recientes de unos 1.700), así que lo publicado antes de activarla no entraba. Ahora, en cada ciclo, después de leer la página de más recientes, la misma pestaña abre **una** página anterior (`…?sort=more_recent&page=N`, verificada en un navegador real), de la 2 a la 20, y avanza una página por ciclo. Al terminar la página 20 no abre ninguna más: quedan cubiertos los cerca de 600 anuncios más recientes.
+
+- Mientras dura (unas 19 visitas extra, alrededor de un día y medio de horario activo) la extensión hace dos cargas por ciclo en vez de una.
+- La página anterior tiene el mismo plazo de un minuto y la misma regla de parada: si no informa anuncios legibles, la vigilancia se detiene hasta "Reanudar" y la página queda pendiente.
+- El `robots.txt` de Plusvalía solo permite a los rastreadores las páginas 2 a 5; el dueño aceptó llegar hasta la 20, igual que aceptó `?sort=`.
+- El popup muestra el avance ("página N de 20"). El estado guardado antes de este cambio se conserva: la puesta al día empieza en la página 2.
+
