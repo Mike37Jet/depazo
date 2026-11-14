@@ -86,6 +86,7 @@ Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el c
 5. **Dedupe:** agrupa en una `Property` canónica los anuncios del mismo inmueble publicados en distintos portales (distancia < 50 m + m² ±5 % + habitaciones iguales + precio ±10 %).
 6. **Match:** para cada `SearchProfile` activo, aplica un pre-filtro SQL (precio, habitaciones, `ST_Within` de la zona) y luego calcula el puntaje en Python.
 7. **Notify:** si el puntaje supera el umbral del usuario y no se le avisó antes, envía push inmediato y lo encola para el resumen por email.
+   - **Push por usuario (implementado):** `--notify-users` recorre los perfiles de búsqueda que tienen dispositivos en `push_subscriptions`, puntúa los anuncios nuevos o con precio nuevo de la ejecución contra cada perfil (sin los descartados de ese usuario) y manda **un solo aviso** por dispositivo con el mejor. El cifrado y la firma VAPID se hacen en el Mac con la clave privada; la API solo guarda suscripciones. Si el servicio de push responde 404 o 410, se borra esa suscripción.
    - **v1 (implementado):** `--alert-profile` puntúa solo los anuncios nuevos o con precio nuevo de la ejecución y manda **un email de resumen en texto plano** por Resend. No repite avisos porque un anuncio solo es nuevo una vez, y un `Idempotency-Key` evita duplicados si se reintenta. Limitación: si el email falla, los anuncios ya quedaron guardados y ese aviso se pierde; la tabla `matches` con `notified_at` lo resolverá cuando haya multiusuario.
 8. **Health check:** si un portal devuelve 0 resultados o falla la validación por encima de un umbral, se marca el run como fallido y se abre un issue en GitHub.
 
@@ -98,7 +99,8 @@ Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el c
 - `listing_price_history`
 - `listing_reactions` (implementada): `user_id`, `listing_id`, `reaction` (`saved` o `discarded`) y `reacted_at`. Un anuncio descartado sale de los matches de ese usuario; uno guardado aparece en Favoritos aunque ya no cumpla los filtros. Se borra en cascada con el anuncio.
 - `matches`: `search_profile_id`, `property_id`, `score`, `score_breakdown jsonb`, `notified_at`. El puntaje se calcula al pedirlo; esta tabla llega con las alertas por usuario.
-- `push_subscriptions`, `ingest_runs`, `geocode_cache`.
+- `push_subscriptions` (implementada): `user_id`, `endpoint` (único), `p256dh`, `auth` y `created_at`.
+- `ingest_runs`, `geocode_cache`.
 
 **No se guardan datos personales de los anunciantes** (teléfonos, nombres, emails): solo el enlace al anuncio original. Así se reduce el riesgo frente a la LOPDP de Ecuador.
 

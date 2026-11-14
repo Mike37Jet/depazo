@@ -56,6 +56,7 @@ Los nombres de las categorías son los que se conocen de la edición 2025. Antes
 ### Ingesta (scrapers)
 - Si un sitio bloquea, el adaptador se detiene y registra el estado `blocked`.
 - **Allowlist de hosts por adaptador.** El cliente HTTP rechaza cualquier otro destino y no sigue redirecciones a otros dominios (anti-SSRF).
+- **Suscripciones push con allowlist.** El endpoint que manda el navegador solo se acepta si es `https`, sin puerto ni credenciales, y su host pertenece a un servicio de push conocido (FCM, Mozilla, Apple, Windows). El emisor lo vuelve a comprobar antes de cada envío y no sigue redirecciones. La clave privada VAPID vive solo en el Mac que corre la ingesta.
 - Timeouts, tamaño máximo de respuesta y reintentos con backoff.
 - El contenido de los anuncios **no es confiable**. Se guarda como texto plano: se eliminan las etiquetas HTML y se normalizan espacios. Las URLs se validan (solo `https` y el dominio del portal).
 - Las imágenes se referencian por URL validada; no se descargan ni se procesan en el servidor.

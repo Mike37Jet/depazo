@@ -92,3 +92,14 @@ class ListingReactionRecord(Base):
     )
     reaction: Mapped[str] = mapped_column(String(20))
     reacted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class PushSubscriptionRecord(Base):
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(Uuid, index=True)
+    endpoint: Mapped[str] = mapped_column(Text, unique=True)
+    p256dh: Mapped[str] = mapped_column(Text)
+    auth: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

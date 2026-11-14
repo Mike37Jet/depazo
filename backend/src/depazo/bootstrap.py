@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from depazo.application.ports.listing_source import ListingSource
 from depazo.application.ports.notifier import Notifier
+from depazo.application.ports.push_sender import PushSender
 from depazo.application.ports.unit_of_work import UnitOfWork
 from depazo.infrastructure.auth.supabase_jwt_verifier import SupabaseJwtVerifier
 from depazo.infrastructure.http.polite_client import PoliteHttpClient
@@ -17,6 +18,12 @@ from depazo.infrastructure.notifications.resend_notifier import (
     NotificationsNotConfiguredError,
     ResendEmailNotifier,
     email_alert_settings_from_environment,
+)
+from depazo.infrastructure.notifications.web_push_sender import (
+    PushNotConfiguredError,
+    WebPushSender,
+    WebPushSettings,
+    web_push_settings_from_environment,
 )
 from depazo.infrastructure.persistence.database import (
     create_database_engine,
@@ -38,6 +45,7 @@ __all__ = [
     "EmailAlertSettings",
     "InvalidProfileFileError",
     "NotificationsNotConfiguredError",
+    "PushNotConfiguredError",
     "UnknownSourceError",
     "create_api_app",
     "email_alert_settings_from_environment",
@@ -45,7 +53,9 @@ __all__ = [
     "open_capture_file_source",
     "open_email_notifier",
     "open_listing_source",
+    "open_push_sender",
     "open_unit_of_work_factory",
+    "web_push_settings_from_environment",
 ]
 
 
@@ -92,6 +102,12 @@ async def open_unit_of_work_factory() -> AsyncIterator[Callable[[], UnitOfWork]]
 async def open_email_notifier(settings: EmailAlertSettings) -> AsyncIterator[Notifier]:
     async with ResendEmailNotifier(settings) as notifier:
         yield notifier
+
+
+@asynccontextmanager
+async def open_push_sender(settings: WebPushSettings) -> AsyncIterator[PushSender]:
+    async with WebPushSender(settings) as sender:
+        yield sender
 
 
 def create_api_app() -> FastAPI:

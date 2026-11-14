@@ -8,6 +8,7 @@ from depazo.application.use_cases.rank_user_matches import UserMatchesReport
 from depazo.domain.listing import Listing
 from depazo.domain.listing_reaction import ListingKey, Reaction
 from depazo.domain.neighborhoods import NeighborhoodSummary
+from depazo.domain.push_subscription import MAX_ENDPOINT_LENGTH, PushSubscription
 from depazo.domain.scoring import CriterionScore
 from depazo.domain.search_profile import ScoreWeights, SearchProfile
 
@@ -181,6 +182,28 @@ class SavedListingsBody(StrictModel):
 
 class ReactionBody(StrictModel):
     reaction: Reaction
+
+
+class PushKeysBody(StrictModel):
+    p256dh: Annotated[str, Field(min_length=1, max_length=200)]
+    auth: Annotated[str, Field(min_length=1, max_length=200)]
+
+
+PushEndpoint = Annotated[str, Field(min_length=1, max_length=MAX_ENDPOINT_LENGTH)]
+
+
+class PushSubscriptionBody(StrictModel):
+    endpoint: PushEndpoint
+    keys: PushKeysBody
+
+    def to_domain(self) -> PushSubscription:
+        return PushSubscription(
+            endpoint=self.endpoint, p256dh=self.keys.p256dh, auth=self.keys.auth
+        )
+
+
+class PushUnsubscriptionBody(StrictModel):
+    endpoint: PushEndpoint
 
 
 class NeighborhoodBody(StrictModel):

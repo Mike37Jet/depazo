@@ -17,6 +17,7 @@ def test_prints_the_api_description_for_client_generation() -> None:
         "/me/search-profile",
         "/me/matches",
         "/me/saved-listings",
+        "/me/push-subscription",
         "/me/listings/{source}/{external_id}/reaction",
         "/neighborhoods",
     }

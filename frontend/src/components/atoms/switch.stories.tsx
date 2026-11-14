@@ -21,3 +21,4 @@ export const Interactive: Story = {
     );
   },
 };
+export const Disabled: Story = { args: { isChecked: false, isDisabled: true } };

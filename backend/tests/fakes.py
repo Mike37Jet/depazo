@@ -4,8 +4,10 @@ from typing import Self
 from uuid import UUID
 
 from depazo.application.dto.listing_alert import ListingAlert
+from depazo.application.ports.push_sender import PushDelivery, PushMessage
 from depazo.domain.listing import Listing
 from depazo.domain.listing_reaction import ListingKey, Reaction
+from depazo.domain.push_subscription import PushSubscription
 from depazo.domain.search_profile import SearchProfile
 
 SourceAndId = tuple[str, str]
@@ -37,6 +39,9 @@ class InMemorySearchProfileRepository:
     async def find_for_user(self, user_id: UUID) -> SearchProfile | None:
         return self.saved.get(user_id)
 
+    async def list_all(self) -> Sequence[tuple[UUID, SearchProfile]]:
+        return list(self.saved.items())
+
     async def save_for_user(
         self, user_id: UUID, profile: SearchProfile, saved_at: datetime
     ) -> None:
@@ -63,6 +68,27 @@ class InMemoryListingReactionRepository:
         self.saved.pop((user_id, key), None)
 
 
+class InMemoryPushSubscriptionRepository:
+    def __init__(self) -> None:
+        self.saved: dict[str, tuple[UUID, PushSubscription]] = {}
+
+    async def save_for_user(
+        self, user_id: UUID, subscription: PushSubscription, saved_at: datetime
+    ) -> None:
+        self.saved[subscription.endpoint] = (user_id, subscription)
+
+    async def remove_for_user(self, user_id: UUID, endpoint: str) -> None:
+        stored = self.saved.get(endpoint)
+        if stored is not None and stored[0] == user_id:
+            del self.saved[endpoint]
+
+    async def list_for_user(self, user_id: UUID) -> Sequence[PushSubscription]:
+        return [subscription for owner, subscription in self.saved.values() if owner == user_id]
+
+    async def remove(self, endpoint: str) -> None:
+        self.saved.pop(endpoint, None)
+
+
 class InMemoryUnitOfWork:
     def __init__(
         self,
@@ -72,6 +98,7 @@ class InMemoryUnitOfWork:
         self._repository = repository or InMemoryListingRepository()
         self._search_profiles = search_profiles or InMemorySearchProfileRepository()
         self._listing_reactions = InMemoryListingReactionRepository(self._repository)
+        self._push_subscriptions = InMemoryPushSubscriptionRepository()
         self.committed = False
 
     @property
@@ -81,6 +108,10 @@ class InMemoryUnitOfWork:
     @property
     def listing_reactions(self) -> InMemoryListingReactionRepository:
         return self._listing_reactions
+
+    @property
+    def push_subscriptions(self) -> InMemoryPushSubscriptionRepository:
+        return self._push_subscriptions
 
     @property
     def search_profiles(self) -> InMemorySearchProfileRepository:
@@ -102,3 +133,15 @@ class RecordingNotifier:
 
     async def send_alerts(self, alerts: Sequence[ListingAlert]) -> None:
         self.batches.append(list(alerts))
+
+
+class RecordingPushSender:
+    def __init__(self, gone_endpoints: frozenset[str] = frozenset()) -> None:
+        self.sent: list[tuple[PushSubscription, PushMessage]] = []
+        self._gone_endpoints = gone_endpoints
+
+    async def send(self, subscription: PushSubscription, message: PushMessage) -> PushDelivery:
+        if subscription.endpoint in self._gone_endpoints:
+            return PushDelivery.GONE
+        self.sent.append((subscription, message))
+        return PushDelivery.DELIVERED

@@ -47,6 +47,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/me/push-subscription": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["subscribe_to_push_me_push_subscription_put"];
+    post?: never;
+    delete: operations["unsubscribe_from_push_me_push_subscription_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/me/saved-listings": {
     parameters: {
       query?: never;
@@ -144,6 +160,17 @@ export interface components {
     };
     NeighborhoodsBody: {
       neighborhoods: components["schemas"]["NeighborhoodBody"][];
+    };
+    PushKeysBody: {
+      auth: string;
+      p256dh: string;
+    };
+    PushSubscriptionBody: {
+      endpoint: string;
+      keys: components["schemas"]["PushKeysBody"];
+    };
+    PushUnsubscriptionBody: {
+      endpoint: string;
     };
     Reaction: "saved" | "discarded";
     ReactionBody: {
@@ -301,6 +328,64 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["MatchesBody"];
         };
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  subscribe_to_push_me_push_subscription_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PushSubscriptionBody"];
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  unsubscribe_from_push_me_push_subscription_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PushUnsubscriptionBody"];
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       422: {
         headers: {

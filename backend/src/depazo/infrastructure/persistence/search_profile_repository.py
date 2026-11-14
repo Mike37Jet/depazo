@@ -1,6 +1,8 @@
+from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from depazo.domain.search_profile import ScoreWeights, SearchProfile
@@ -14,6 +16,10 @@ class SqlAlchemySearchProfileRepository:
     async def find_for_user(self, user_id: UUID) -> SearchProfile | None:
         record = await self._session.get(SearchProfileRecord, user_id)
         return _to_profile(record) if record is not None else None
+
+    async def list_all(self) -> Sequence[tuple[UUID, SearchProfile]]:
+        records = await self._session.scalars(select(SearchProfileRecord))
+        return [(record.user_id, _to_profile(record)) for record in records]
 
     async def save_for_user(
         self, user_id: UUID, profile: SearchProfile, saved_at: datetime
