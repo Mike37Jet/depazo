@@ -11,6 +11,7 @@ DEFAULT_LISTING = Listing(
     title="Departamento en La Carolina, Quito",
     description="Departamento luminoso",
     monthly_rent_usd=Decimal(720),
+    condo_fee_usd=Decimal(80),
     area_m2=Decimal(95),
     bedrooms=2,
     bathrooms=2,

@@ -31,6 +31,7 @@ class Listing:
     title: str
     description: str
     monthly_rent_usd: Decimal | None
+    condo_fee_usd: Decimal | None
     area_m2: Decimal | None
     bedrooms: int | None
     bathrooms: int | None
@@ -42,8 +43,11 @@ class Listing:
     def __post_init__(self) -> None:
         if not self.source or not self.external_id or not self.url:
             raise InvalidListingError("source, external_id and url are required")
-        if self.monthly_rent_usd is not None and self.monthly_rent_usd < 0:
-            raise InvalidListingError(f"negative rent: {self.monthly_rent_usd}")
+        if any(
+            amount is not None and amount < 0
+            for amount in (self.monthly_rent_usd, self.condo_fee_usd)
+        ):
+            raise InvalidListingError("rent and condo fee cannot be negative")
         if any(count is not None and count < 0 for count in (self.bedrooms, self.bathrooms)):
             raise InvalidListingError("room counts cannot be negative")
 

@@ -19,6 +19,11 @@ def test_rejects_negative_rent() -> None:
         a_listing(monthly_rent_usd=Decimal(-1))
 
 
+def test_rejects_negative_condo_fee() -> None:
+    with pytest.raises(InvalidListingError):
+        a_listing(condo_fee_usd=Decimal(-1))
+
+
 def test_rejects_negative_bedrooms() -> None:
     with pytest.raises(InvalidListingError):
         a_listing(bedrooms=-1)

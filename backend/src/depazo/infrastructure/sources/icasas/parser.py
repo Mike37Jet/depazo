@@ -54,6 +54,7 @@ def _parse_card(card: LexborNode) -> Listing | None:
             title=_clean_text(link.text()),
             description=_clean_text(_text_in(card, "p.description") or ""),
             monthly_rent_usd=_number_in(card, ".price"),
+            condo_fee_usd=None,
             area_m2=plausible_apartment_area(area) if area is not None else None,
             bedrooms=_integer_in(card, ".rooms"),
             bathrooms=_integer_in(card, ".bathrooms"),
