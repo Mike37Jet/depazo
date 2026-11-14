@@ -17,6 +17,7 @@ htmlcov/
 
 node_modules/
 dist/
+dev-dist/
 .vite/
 coverage/
 storybook-static/

@@ -1,0 +1,261 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-label: var(--label);
+  --color-label-2: var(--label-2);
+  --color-label-3: var(--label-3);
+  --color-separator: var(--separator);
+  --color-accent: var(--accent);
+  --color-accent-fill: var(--accent-fill);
+  --color-on-accent: var(--on-accent);
+  --color-score-high: var(--score-high);
+  --color-score-mid: var(--score-mid);
+  --color-score-high-tint: var(--score-high-tint);
+  --color-score-mid-tint: var(--score-mid-tint);
+  --color-glass-select: var(--glass-select);
+  --color-on-media: var(--on-media);
+  --color-placeholder-ink: var(--placeholder-ink);
+  --color-danger: var(--danger);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --radius-segment: 9px;
+  --radius-segment-inner: 7px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-segment: var(--segment-shadow);
+  --duration-default: var(--motion-default);
+  --duration-snappy: var(--motion-snappy);
+  --duration-fade: var(--motion-fade);
+  --ease-spring: var(--ease-spring);
+}
+
+@theme {
+  --text-large-title: 2.125rem;
+  --text-large-title--line-height: 2.5625rem;
+  --text-large-title--font-weight: 700;
+  --text-large-title--letter-spacing: -0.02em;
+  --text-title-2: 1.375rem;
+  --text-title-2--line-height: 1.75rem;
+  --text-title-2--font-weight: 700;
+  --text-title-2--letter-spacing: -0.01em;
+  --text-title-3: 1.25rem;
+  --text-title-3--line-height: 1.5625rem;
+  --text-title-3--font-weight: 600;
+  --text-title-3--letter-spacing: -0.005em;
+  --text-headline: 1.0625rem;
+  --text-headline--line-height: 1.375rem;
+  --text-headline--font-weight: 600;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.375rem;
+  --text-callout: 1rem;
+  --text-callout--line-height: 1.3125rem;
+  --text-subhead: 0.9375rem;
+  --text-subhead--line-height: 1.25rem;
+  --text-footnote: 0.8125rem;
+  --text-footnote--line-height: 1.125rem;
+  --text-footnote--letter-spacing: 0.005em;
+  --text-caption-1: 0.75rem;
+  --text-caption-1--line-height: 1rem;
+  --text-caption-1--letter-spacing: 0.01em;
+  --text-caption-2: 0.6875rem;
+  --text-caption-2--line-height: 0.8125rem;
+  --text-caption-2--font-weight: 500;
+  --text-caption-2--letter-spacing: 0.01em;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg font-sans text-body text-label antialiased;
+    min-height: 100dvh;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .glass {
+    position: relative;
+    isolation: isolate;
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 1px var(--glass-rim-top),
+      inset 0 -1px 1px var(--glass-rim-bottom),
+      inset 0 0 0 0.5px var(--glass-rim-edge);
+  }
+
+  .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      135deg,
+      var(--glass-sheen) 0%,
+      transparent 38%,
+      transparent 66%,
+      var(--glass-sheen) 100%
+    );
+    opacity: 0.7;
+  }
+
+  .glass-regular {
+    background: var(--glass-regular-bg);
+    -webkit-backdrop-filter: var(--glass-filter-regular);
+    backdrop-filter: var(--glass-filter-regular);
+    color: var(--label);
+  }
+
+  .glass-clear {
+    background:
+      linear-gradient(var(--glass-clear-tint), var(--glass-clear-tint)), var(--glass-clear-bg);
+    -webkit-backdrop-filter: var(--glass-filter-clear);
+    backdrop-filter: var(--glass-filter-clear);
+    color: var(--on-media);
+  }
+
+  .edge-top {
+    background: linear-gradient(var(--bg) 52%, transparent);
+  }
+
+  .placeholder-photo {
+    background: linear-gradient(135deg, var(--placeholder-a), var(--placeholder-d));
+  }
+
+  .pressable {
+    transition: transform var(--motion-snappy) var(--ease-spring);
+  }
+
+  .pressable:active {
+    transform: scale(0.97);
+  }
+
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 44px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    --val: 0%;
+  }
+
+  .range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent) var(--val), var(--surface-2) var(--val));
+    box-shadow: inset 0 0 0 0.5px var(--separator);
+  }
+
+  .range::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent) var(--val), var(--surface-2) var(--val));
+  }
+
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 38px;
+    height: 24px;
+    margin-top: -9px;
+    border-radius: 12px;
+    background: var(--on-media);
+    box-shadow:
+      0 2px 8px rgb(0 0 0 / 0.25),
+      0 0 0 0.5px rgb(0 0 0 / 0.06);
+    transition:
+      transform var(--motion-snappy) var(--ease-spring),
+      background var(--motion-snappy) ease;
+  }
+
+  .range::-moz-range-thumb {
+    width: 38px;
+    height: 24px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--on-media);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  }
+
+  .range:active::-webkit-slider-thumb {
+    transform: scale(1.35);
+    background: rgb(255 255 255 / 0.35);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    box-shadow:
+      0 4px 16px rgb(0 0 0 / 0.2),
+      inset 0 1px 1px rgb(255 255 255 / 0.9),
+      inset 0 0 0 0.5px rgb(255 255 255 / 0.6);
+  }
+
+  .range:active::-moz-range-thumb {
+    transform: scale(1.35);
+    background: rgb(255 255 255 / 0.35);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pressable,
+    .pressable:active {
+      transition: none;
+      transform: none;
+    }
+
+    .pressable:active {
+      opacity: 0.7;
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-regular,
+    .glass-clear {
+      background: var(--surface);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      color: var(--label);
+    }
+
+    .glass::before {
+      display: none;
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    .glass-regular,
+    .glass-clear {
+      background: var(--surface);
+      box-shadow: inset 0 0 0 1px var(--label-2);
+      color: var(--label);
+    }
+  }
+}
+
+@layer components {
+  .inset-group > * {
+    position: relative;
+  }
+
+  .inset-group > * + *::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 0;
+    height: 1px;
+    background: var(--separator);
+    transform: scaleY(0.5);
+  }
+}
