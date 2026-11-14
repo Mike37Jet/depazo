@@ -1,7 +1,9 @@
 from uuid import uuid4
 
+import asyncpg
 from pydantic import SecretStr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 ASYNC_DRIVER_PREFIX = "postgresql+asyncpg://"
@@ -10,6 +12,15 @@ PLAIN_POSTGRES_PREFIXES = ("postgresql://", "postgres://")
 
 class DatabaseNotConfiguredError(ValueError):
     pass
+
+
+DATABASE_FAILURES: tuple[type[Exception], ...] = (
+    DatabaseNotConfiguredError,
+    SQLAlchemyError,
+    asyncpg.PostgresError,
+    asyncpg.InterfaceError,
+    OSError,
+)
 
 
 class DatabaseSettings(BaseSettings):

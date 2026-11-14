@@ -1,3 +1,5 @@
+import re
+import unicodedata
 from collections.abc import AsyncIterator
 from decimal import Decimal
 from pathlib import Path
@@ -9,14 +11,20 @@ from pydantic.alias_generators import to_camel
 
 from depazo.application.ports.listing_source import SourceUnavailableError
 from depazo.domain.listing import InvalidListingError, Listing, plausible_apartment_area
+from depazo.infrastructure.sources.phone_numbers import without_phone_numbers
 
 CAPTURE_FORMAT = "depazo.capture"
 CAPTURE_FORMAT_VERSION = 1
 MAX_CAPTURE_FILE_BYTES = 10 * 1024 * 1024
 MAX_CAPTURED_LISTINGS = 5000
+MAX_CAPTURE_MESSAGE_BYTES = 256 * 1024
+MAX_CAPTURE_MESSAGE_LISTINGS = 100
+CAPTURE_MESSAGE_SOURCE = "plusvalia"
 SOURCE_NAME = "capture"
 LISTING_HOSTS = {"plusvalia": "www.plusvalia.com", "marketplace": "www.facebook.com"}
 IMAGE_HOST_SUFFIXES = {"plusvalia": ".naventcdn.com", "marketplace": ".fbcdn.net"}
+HOST_NAME_PATTERN = re.compile(r"[a-z0-9-]+(?:\.[a-z0-9-]+)+")
+UNSTORABLE_CATEGORIES = frozenset({"Cc", "Cs"})
 
 Amount = Annotated[Decimal, Field(ge=0, le=1_000_000)]
 RoomCount = Annotated[int, Field(ge=0, le=50)]
@@ -70,6 +78,41 @@ class CapturedFileListingSource:
                 yield listing
 
 
+class CapturedMessageListingSource:
+    def __init__(self, capture: CaptureFile) -> None:
+        self._capture = capture
+
+    @property
+    def name(self) -> str:
+        return SOURCE_NAME
+
+    async def listings(self, max_pages: int) -> AsyncIterator[Listing]:
+        for record in self._capture.listings:
+            listing = to_listing(record)
+            if listing is not None:
+                yield listing
+
+
+def read_capture_message(content: bytes) -> CaptureFile:
+    if len(content) > MAX_CAPTURE_MESSAGE_BYTES:
+        raise InvalidCaptureFileError(f"capture message exceeds {MAX_CAPTURE_MESSAGE_BYTES} bytes")
+    try:
+        capture = CaptureFile.model_validate_json(content)
+    except ValidationError as error:
+        raise InvalidCaptureFileError(
+            f"capture message is not a valid depazo capture: {error.error_count()} errors"
+        ) from error
+    if len(capture.listings) > MAX_CAPTURE_MESSAGE_LISTINGS:
+        raise InvalidCaptureFileError(
+            f"capture message exceeds {MAX_CAPTURE_MESSAGE_LISTINGS} listings"
+        )
+    if any(record.source != CAPTURE_MESSAGE_SOURCE for record in capture.listings):
+        raise InvalidCaptureFileError(
+            f"capture message accepts only {CAPTURE_MESSAGE_SOURCE} listings"
+        )
+    return capture
+
+
 def read_capture_file(path: Path) -> CaptureFile:
     try:
         if path.stat().st_size > MAX_CAPTURE_FILE_BYTES:
@@ -84,22 +127,25 @@ def read_capture_file(path: Path) -> CaptureFile:
 
 
 def to_listing(record: CapturedListingRecord) -> Listing | None:
-    if not _is_https_on_host(record.url, LISTING_HOSTS[record.source]):
+    if _strict_https_host(record.url) != LISTING_HOSTS[record.source]:
+        return None
+    title = _plain_text(record.title)
+    if not title:
         return None
     try:
         return Listing(
             source=record.source,
             external_id=record.external_id,
             url=record.url,
-            title=record.title,
+            title=title,
             description="",
             monthly_rent_usd=record.monthly_rent_usd,
             condo_fee_usd=record.condo_fee_usd,
             area_m2=plausible_apartment_area(record.area_m2) if record.area_m2 else None,
             bedrooms=record.bedrooms,
             bathrooms=record.bathrooms,
-            neighborhood=record.neighborhood,
-            city=record.city,
+            neighborhood=_plain_place(record.neighborhood),
+            city=_plain_place(record.city),
             location=None,
             image_url=_trusted_image_url(record),
         )
@@ -107,16 +153,40 @@ def to_listing(record: CapturedListingRecord) -> Listing | None:
         return None
 
 
+def _plain_place(place: str | None) -> str | None:
+    if place is None:
+        return None
+    return _plain_text(place) or None
+
+
+def _plain_text(text: str) -> str:
+    printable = "".join(" " if _is_unstorable(character) else character for character in text)
+    return without_phone_numbers(printable)
+
+
 def _trusted_image_url(record: CapturedListingRecord) -> str | None:
     if record.image_url is None:
         return None
-    parts = urlsplit(record.image_url)
-    is_trusted = parts.scheme == "https" and (parts.hostname or "").endswith(
-        IMAGE_HOST_SUFFIXES[record.source]
-    )
+    host = _strict_https_host(record.image_url)
+    is_trusted = host is not None and host.endswith(IMAGE_HOST_SUFFIXES[record.source])
     return record.image_url if is_trusted else None
 
 
-def _is_https_on_host(url: str, host: str) -> bool:
-    parts = urlsplit(url)
-    return parts.scheme == "https" and parts.hostname == host
+def _strict_https_host(url: str) -> str | None:
+    if "\\" in url or any(_is_blank_or_control(character) for character in url):
+        return None
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return None
+    if parts.scheme != "https" or HOST_NAME_PATTERN.fullmatch(parts.netloc) is None:
+        return None
+    return parts.netloc
+
+
+def _is_blank_or_control(character: str) -> bool:
+    return character.isspace() or unicodedata.category(character).startswith("C")
+
+
+def _is_unstorable(character: str) -> bool:
+    return unicodedata.category(character) in UNSTORABLE_CATEGORIES

@@ -65,5 +65,5 @@ python_version = "3.13"
 mypy_path = "src"
 
 [[tool.mypy.overrides]]
-module = ["pywebpush", "py_vapid"]
+module = ["asyncpg", "pywebpush", "py_vapid"]
 ignore_missing_imports = true

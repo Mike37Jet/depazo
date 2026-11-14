@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 from dataclasses import asdict, dataclass
@@ -7,7 +8,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, BinaryIO
 
 import typer
 
@@ -24,7 +25,10 @@ from depazo.application.use_cases.push_new_matches import PushNewMatches, PushRe
 from depazo.application.use_cases.rank_listings import RankedListing, RankingReport, RankListings
 from depazo.application.use_cases.record_listings import RecordingSummary, RecordListings
 from depazo.bootstrap import (
+    DATABASE_FAILURES,
+    MAX_CAPTURE_MESSAGE_BYTES,
     EmailAlertSettings,
+    InvalidCaptureFileError,
     InvalidProfileFileError,
     NotificationsNotConfiguredError,
     PushNotConfiguredError,
@@ -32,10 +36,12 @@ from depazo.bootstrap import (
     email_alert_settings_from_environment,
     load_search_profile,
     open_capture_file_source,
+    open_capture_message_source,
     open_email_notifier,
     open_listing_source,
     open_push_sender,
     open_unit_of_work_factory,
+    read_capture_message,
     web_push_settings_from_environment,
 )
 from depazo.domain.listing import Listing
@@ -44,10 +50,17 @@ from depazo.domain.search_profile import SearchProfile
 from depazo.infrastructure.notifications.web_push_sender import WebPushSettings
 from depazo.infrastructure.persistence.database import DatabaseNotConfiguredError
 from depazo.presentation.api.app import describe_api
+from depazo.presentation.cli.native_messaging import (
+    InvalidNativeMessageError,
+    read_native_message,
+    write_native_message,
+)
 
 MAX_PAGES_PER_RUN = 20
 MAX_MATCHES_SHOWN = 200
 SOURCE_STOPPED_EXIT_CODE = 3
+INVALID_CAPTURE_REPLY: dict[str, object] = {"ok": False, "error": "invalid_capture"}
+UNAVAILABLE_REPLY: dict[str, object] = {"ok": False, "error": "unavailable"}
 
 app = typer.Typer(no_args_is_help=True, help="depazo: rental apartment finder for Quito.")
 
@@ -135,6 +148,56 @@ def import_capture(
         output,
         DeliveryRequest(save, alert_profile, notify_users),
     )
+
+
+@app.command(help="Save one capture sent by the browser extension over native messaging.")
+def receive_capture(
+    notify_users: Annotated[
+        bool,
+        typer.Option(
+            "--notify-users", help="Send a push notification to every user with new matches."
+        ),
+    ] = False,
+) -> None:
+    reply = _reply_to_capture_message(sys.stdin.buffer, notify_users)
+    write_native_message(sys.stdout.buffer, reply)
+
+
+def _reply_to_capture_message(stream: BinaryIO, should_notify_users: bool) -> dict[str, object]:
+    try:
+        capture = read_capture_message(read_native_message(stream, MAX_CAPTURE_MESSAGE_BYTES))
+    except (InvalidNativeMessageError, InvalidCaptureFileError) as error:
+        _report_rejected_capture(error)
+        return INVALID_CAPTURE_REPLY
+    try:
+        push_settings = _push_settings(should_notify_users, should_save=True)
+        outcome = asyncio.run(
+            _collect(lambda: open_capture_message_source(capture), 1, True, None, push_settings)
+        )
+    except (PushNotConfiguredError, SourceUnavailableError) as error:
+        _report_rejected_capture(error)
+        return UNAVAILABLE_REPLY
+    except DATABASE_FAILURES as error:
+        _report_rejected_capture(error)
+        return UNAVAILABLE_REPLY
+    except Exception as error:
+        _report_rejected_capture(error)
+        return UNAVAILABLE_REPLY
+    if outcome.summary is None:
+        return UNAVAILABLE_REPLY
+    _print_summary(outcome.summary)
+    if outcome.push_report is not None:
+        _print_push_report(outcome.push_report)
+    return {
+        "ok": True,
+        "new": len(outcome.summary.new_listings),
+        "repriced": len(outcome.summary.repriced_listings),
+        "unchanged": outcome.summary.unchanged_count,
+    }
+
+
+def _report_rejected_capture(error: Exception) -> None:
+    typer.secho(f"capture not saved: {type(error).__name__}", fg=typer.colors.RED, err=True)
 
 
 @app.command(help="Rank saved listings against a search profile.")

@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from selectolax.lexbor import LexborHTMLParser
 
 from depazo.domain.listing import MIN_PLAUSIBLE_MONTHLY_RENT_USD, InvalidListingError, Listing
+from depazo.infrastructure.sources.phone_numbers import without_phone_numbers
 
 SOURCE_NAME = "marketplace"
 SITE_HOST = "www.facebook.com"
@@ -68,8 +69,6 @@ BEDROOMS_PATTERN = re.compile(
 )
 BATHROOMS_PATTERN = re.compile(r"(\d+)(?:[.,]5)?\s*bañ(?:o|os)\b", re.IGNORECASE)
 SECTOR_PATTERN = re.compile(r"\bsector\s+((?:[^\W\d_]+\s?){1,4})", re.IGNORECASE)
-KEYCAP_MARKS_PATTERN = re.compile(r"[\ufe0f\u20e3]")
-PHONE_NUMBER_PATTERN = re.compile(r"(?:\+?593|\b0)[\s.\-]?(?:\d[\s.\-]?){7,9}")
 WHITESPACE_PATTERN = re.compile(r"\s+")
 WORD_PATTERN = re.compile(r"[a-z]+")
 MAX_ROOM_COUNT = 20
@@ -162,8 +161,8 @@ def _validated_node(raw_node: dict[str, object]) -> _ListingNode | None:
 
 
 def _to_listing(node: _ListingNode) -> Listing | None:
-    title = _without_phone_numbers(_clean_text(node.marketplace_listing_title))
-    text = f"{title} {_without_phone_numbers(_clean_text(node.custom_title))}"
+    title = without_phone_numbers(_clean_text(node.marketplace_listing_title))
+    text = f"{title} {without_phone_numbers(_clean_text(node.custom_title))}"
     place = _place(node)
     if not _is_available(node) or not _is_apartment(text) or not _is_in_quito_district(place):
         return None
@@ -236,11 +235,6 @@ def _image_url(node: _ListingNode) -> str | None:
     parts = urlsplit(photo.image.uri)
     is_trusted = parts.scheme == "https" and (parts.hostname or "").endswith(IMAGE_HOST_SUFFIX)
     return photo.image.uri if is_trusted else None
-
-
-def _without_phone_numbers(text: str) -> str:
-    plain_digits = KEYCAP_MARKS_PATTERN.sub("", text)
-    return _clean_text(PHONE_NUMBER_PATTERN.sub(" ", plain_digits))
 
 
 def _normalize(text: str) -> str:

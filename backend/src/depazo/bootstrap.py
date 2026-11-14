@@ -26,13 +26,21 @@ from depazo.infrastructure.notifications.web_push_sender import (
     web_push_settings_from_environment,
 )
 from depazo.infrastructure.persistence.database import (
+    DATABASE_FAILURES,
     create_database_engine,
     database_url_from_environment,
 )
 from depazo.infrastructure.persistence.unit_of_work import SqlAlchemyUnitOfWork
 from depazo.infrastructure.profiles.profile_file import InvalidProfileFileError, load_search_profile
 from depazo.infrastructure.sources.arriendos_ec import source as arriendos_ec
-from depazo.infrastructure.sources.capture.capture_file import CapturedFileListingSource
+from depazo.infrastructure.sources.capture.capture_file import (
+    MAX_CAPTURE_MESSAGE_BYTES,
+    CapturedFileListingSource,
+    CapturedMessageListingSource,
+    CaptureFile,
+    InvalidCaptureFileError,
+    read_capture_message,
+)
 from depazo.infrastructure.sources.icasas import source as icasas
 from depazo.infrastructure.sources.marketplace import source as marketplace
 from depazo.presentation.api.app import create_app
@@ -44,7 +52,11 @@ SECONDS_PER_MINUTE = 60.0
 JWKS_TIMEOUT_SECONDS = 10.0
 
 __all__ = [
+    "DATABASE_FAILURES",
+    "MAX_CAPTURE_MESSAGE_BYTES",
+    "CaptureFile",
     "EmailAlertSettings",
+    "InvalidCaptureFileError",
     "InvalidProfileFileError",
     "NotificationsNotConfiguredError",
     "PushNotConfiguredError",
@@ -53,10 +65,12 @@ __all__ = [
     "email_alert_settings_from_environment",
     "load_search_profile",
     "open_capture_file_source",
+    "open_capture_message_source",
     "open_email_notifier",
     "open_listing_source",
     "open_push_sender",
     "open_unit_of_work_factory",
+    "read_capture_message",
     "web_push_settings_from_environment",
 ]
 
@@ -109,6 +123,11 @@ def open_listing_source(name: str) -> AbstractAsyncContextManager[ListingSource]
 @asynccontextmanager
 async def open_capture_file_source(path: Path) -> AsyncIterator[ListingSource]:
     yield CapturedFileListingSource(path)
+
+
+@asynccontextmanager
+async def open_capture_message_source(capture: CaptureFile) -> AsyncIterator[ListingSource]:
+    yield CapturedMessageListingSource(capture)
 
 
 @asynccontextmanager
