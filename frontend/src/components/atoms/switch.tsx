@@ -5,9 +5,16 @@ export interface SwitchProps {
   isChecked: boolean;
   onCheckedChange: (isChecked: boolean) => void;
   labelledBy?: string;
+  isDisabled?: boolean;
 }
 
-export function Switch({ id, isChecked, onCheckedChange, labelledBy }: SwitchProps) {
+export function Switch({
+  id,
+  isChecked,
+  onCheckedChange,
+  labelledBy,
+  isDisabled = false,
+}: SwitchProps) {
   return (
     <button
       id={id}
@@ -15,10 +22,11 @@ export function Switch({ id, isChecked, onCheckedChange, labelledBy }: SwitchPro
       role="switch"
       aria-checked={isChecked}
       aria-labelledby={labelledBy}
+      disabled={isDisabled}
       onClick={() => onCheckedChange(!isChecked)}
       className={joinClassNames(
         "group relative h-7.75 w-12.75 shrink-0 rounded-full",
-        "transition-colors duration-snappy ease-spring",
+        "transition-colors duration-snappy ease-spring disabled:opacity-50",
         isChecked ? "bg-score-high" : "bg-surface-2 shadow-[inset_0_0_0_1px_var(--separator)]",
       )}
     >

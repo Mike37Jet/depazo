@@ -1,6 +1,7 @@
 import createClient, { type Client } from "openapi-fetch";
 import type { components, paths } from "../api/schema";
 import type { AuthGateway } from "./auth-gateway";
+import type { PushDevice } from "./push-gateway";
 
 export type SearchProfile = components["schemas"]["SearchProfileBody-Output"];
 export type SearchProfileInput = components["schemas"]["SearchProfileBody-Input"];
@@ -28,6 +29,8 @@ export interface DepazoApi {
   listSavedListings(): Promise<Match[] | null>;
   reactToListing(listing: ListingReference, reaction: Reaction): Promise<void>;
   clearReaction(listing: ListingReference): Promise<void>;
+  subscribeToPush(device: PushDevice): Promise<void>;
+  unsubscribeFromPush(endpoint: string): Promise<void>;
 }
 
 const REACTION_PATH = "/me/listings/{source}/{external_id}/reaction";
@@ -113,6 +116,20 @@ export function createDepazoApi(baseUrl: string, auth: AuthGateway): DepazoApi {
       const { response } = await client.DELETE(REACTION_PATH, {
         params: { path: toPathParams(listing) },
       });
+      if (!response.ok) {
+        throw new ApiRequestError(response.status);
+      }
+    },
+    async subscribeToPush(device) {
+      const { response } = await client.PUT("/me/push-subscription", {
+        body: { endpoint: device.endpoint, keys: device.keys },
+      });
+      if (!response.ok) {
+        throw new ApiRequestError(response.status);
+      }
+    },
+    async unsubscribeFromPush(endpoint) {
+      const { response } = await client.DELETE("/me/push-subscription", { body: { endpoint } });
       if (!response.ok) {
         throw new ApiRequestError(response.status);
       }

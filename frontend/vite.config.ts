@@ -11,7 +11,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icon.svg"],
+      includeAssets: ["icon.svg", "push-handler.js"],
       manifest: {
         name: "depazo",
         short_name: "depazo",
@@ -27,6 +27,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,webmanifest}"],
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [],
+        importScripts: ["push-handler.js"],
       },
     }),
   ],

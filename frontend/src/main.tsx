@@ -5,6 +5,7 @@ import { App } from "./app";
 import { applyStoredAppearance } from "./hooks/use-appearance";
 import { createAppRouter } from "./routes/router";
 import { createDepazoApi } from "./services/api-client";
+import { BrowserPushGateway } from "./services/browser-push-gateway";
 import { readConfig } from "./services/config";
 import { SupabaseAuthGateway } from "./services/supabase-auth-gateway";
 import "./styles/index.css";
@@ -20,7 +21,11 @@ applyStoredAppearance();
 
 const config = readConfig(import.meta.env);
 const auth = new SupabaseAuthGateway(config.supabaseUrl, config.supabasePublishableKey);
-const services = { auth, api: createDepazoApi(config.apiBaseUrl, auth) };
+const services = {
+  auth,
+  api: createDepazoApi(config.apiBaseUrl, auth),
+  push: new BrowserPushGateway(config.vapidPublicKey),
+};
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: STALE_AFTER_MILLISECONDS, retry: 1 } },
 });

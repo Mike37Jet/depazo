@@ -2,12 +2,16 @@ import { useId } from "react";
 import { Button } from "../components/atoms/button";
 import { RangeSlider } from "../components/atoms/range-slider";
 import { SegmentedControl } from "../components/atoms/segmented-control";
+import { Switch } from "../components/atoms/switch";
 import { InsetGroup } from "../components/molecules/inset-group";
 import { StatusMessage } from "../components/molecules/status-message";
 import { TabPage } from "../components/templates/tab-page";
+import { explainPushAvailability } from "../format/push-availability";
 import { useAppearance } from "../hooks/use-appearance";
+import { usePushNotifications } from "../hooks/use-push-notifications";
 import { useSignOut } from "../hooks/use-sign-in";
 import type { ThemePreference } from "../services/appearance";
+import { PushPermissionDeniedError } from "../services/push-gateway";
 
 const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
   { value: "system", label: "Sistema" },
@@ -19,6 +23,9 @@ export function AccountPage({ email }: { email: string }) {
   const signOut = useSignOut();
   const { appearance, update } = useAppearance();
   const tintId = useId();
+  const pushLabelId = useId();
+  const push = usePushNotifications();
+  const pushError = push.enable.error ?? push.disable.error;
 
   return (
     <TabPage title="Cuenta">
@@ -58,6 +65,34 @@ export function AccountPage({ email }: { email: string }) {
           </div>
         </div>
       </InsetGroup>
+
+      <InsetGroup title="Notificaciones" footer={explainPushAvailability(push.availability)}>
+        <div className="flex min-h-11 items-center justify-between gap-4 px-4 py-1.5">
+          <span id={pushLabelId} className="text-body text-label">
+            Avisos en este dispositivo
+          </span>
+          {push.availability === "available" && (
+            <Switch
+              labelledBy={pushLabelId}
+              isChecked={push.isEnabled}
+              isDisabled={push.isBusy}
+              onCheckedChange={(isChecked) =>
+                isChecked ? push.enable.mutate() : push.disable.mutate()
+              }
+            />
+          )}
+        </div>
+      </InsetGroup>
+      {pushError && (
+        <StatusMessage
+          tone="error"
+          message={
+            pushError instanceof PushPermissionDeniedError
+              ? "No diste permiso para los avisos. Puedes activarlo en los ajustes del navegador."
+              : "No pudimos cambiar los avisos. Inténtalo de nuevo."
+          }
+        />
+      )}
 
       {signOut.isError && (
         <StatusMessage tone="error" message="No pudimos cerrar la sesión. Inténtalo de nuevo." />
