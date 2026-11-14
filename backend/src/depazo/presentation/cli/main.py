@@ -12,7 +12,11 @@ from typing import Annotated
 import typer
 
 from depazo.application.dto.listing_alert import ListingAlert
-from depazo.application.ports.listing_source import ListingSource, SourceUnavailableError
+from depazo.application.ports.listing_source import (
+    ListingSource,
+    SourceLayoutChangedError,
+    SourceUnavailableError,
+)
 from depazo.application.ports.notifier import NotificationFailedError
 from depazo.application.use_cases.alert_matching_listings import AlertMatchingListings
 from depazo.application.use_cases.collect_listings import CollectionReport, CollectListings
@@ -43,6 +47,7 @@ from depazo.presentation.api.app import describe_api
 
 MAX_PAGES_PER_RUN = 20
 MAX_MATCHES_SHOWN = 200
+SOURCE_STOPPED_EXIT_CODE = 3
 
 app = typer.Typer(no_args_is_help=True, help="depazo: rental apartment finder for Quito.")
 
@@ -201,6 +206,9 @@ def _collect_and_print(
             err=True,
         )
         raise typer.Exit(code=1) from error
+    except SourceLayoutChangedError as error:
+        typer.secho(str(error), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=SOURCE_STOPPED_EXIT_CODE) from error
     except (
         UnknownSourceError,
         SourceUnavailableError,
@@ -223,7 +231,10 @@ def _collect_and_print(
     if outcome.push_report is not None:
         _print_push_report(outcome.push_report)
     if report.was_blocked:
-        typer.secho(f"{report.source} blocked the collector; stopped.", fg=typer.colors.YELLOW)
+        typer.secho(
+            f"{report.source} blocked the collector; stopped.", fg=typer.colors.YELLOW, err=True
+        )
+        raise typer.Exit(code=SOURCE_STOPPED_EXIT_CODE)
 
 
 def _alert_plan(alert_profile_file: Path | None, should_save: bool) -> AlertPlan | None:
