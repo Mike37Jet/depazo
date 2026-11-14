@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "depazo",
+  "version": "0.1.0",
+  "description": "Guarda los anuncios de arriendo que ves en Plusvalía para compararlos en depazo.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.plusvalia.com/*"],
+  "action": { "default_popup": "popup/popup.html", "default_title": "depazo" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.plusvalia.com/alquiler/*"],
+      "js": ["content/plusvalia.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

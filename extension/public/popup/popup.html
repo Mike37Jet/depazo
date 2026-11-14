@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>depazo</title>
+    <link rel="stylesheet" href="popup.css" />
+    <script src="popup.js" defer></script>
+  </head>
+  <body>
+    <main class="panel" aria-live="polite">
+      <header>
+        <h1 class="title">depazo</h1>
+        <p class="subtitle">Captura de anuncios de Plusvalía</p>
+      </header>
+
+      <section id="loading-state">
+        <p class="secondary">Cargando anuncios guardados…</p>
+      </section>
+
+      <section id="empty-state" hidden>
+        <p class="headline">Aún no hay anuncios guardados</p>
+        <p class="secondary">
+          Abre los resultados de arriendo en Plusvalía y recorre las páginas. Los anuncios que veas
+          se guardan solos en este navegador.
+        </p>
+      </section>
+
+      <section id="ready-state" hidden>
+        <p class="count"><span id="listing-count">0</span> anuncios guardados</p>
+        <p class="secondary" id="last-capture"></p>
+        <button type="button" class="primary-button" id="export-button">Exportar JSON</button>
+        <button type="button" class="destructive-button" id="clear-button">Borrar capturas</button>
+      </section>
+
+      <section id="error-state" hidden>
+        <p class="headline danger">No se pudieron leer los anuncios guardados</p>
+        <p class="secondary">
+          Los datos de la extensión están dañados. Bórralos y vuelve a recorrer Plusvalía.
+        </p>
+        <button type="button" class="destructive-button" id="reset-button">Borrar capturas</button>
+      </section>
+
+      <footer class="footnote">
+        Solo se guardan datos del inmueble: nunca nombres ni teléfonos de anunciantes.
+      </footer>
+    </main>
+  </body>
+</html>

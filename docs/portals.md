@@ -1,5 +1,7 @@
 # Verificación de portales (Quito)
 
+> Actualización 2026-11-13: con un navegador normal, Plusvalía carga sin desafío; el bloqueo de Cloudflare afecta solo a clientes automatizados. La extensión lee las tarjetas por sus atributos `data-qa` (`posting PROPERTY`, `POSTING_CARD_PRICE`, `expensas`, `POSTING_CARD_FEATURES`, `POSTING_CARD_LOCATION`). La paginación es del lado del cliente, por eso la extensión observa cambios del DOM.
+
 > Fecha: 2026-11-13. Decisión: [ADR 0016](adr/0016-fuentes-de-datos.md) (aceptada): scraper para iCasas, BienesOnline y arriendos.ec; extensión asistida para Plusvalía, Marketplace y Properati; API para Mercado Libre.
 > Método: una petición por recurso (`robots.txt`, términos de uso, una página de listado), con un User-Agent identificable, sin evadir ninguna protección.
 
