@@ -69,7 +69,8 @@ Backend (desde `backend/`):
 | Lint y formato | `uv run ruff check --fix` · `uv run ruff format` |
 | Tipos | `uv run mypy src tests` |
 | Migraciones | `uv run alembic upgrade head` (lee `DEPAZO_DATABASE_URL`) |
-| Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json] [--save]` |
+| Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json] [--save] [--alert-profile <perfil.json>]` |
+| Alertas por email | `--alert-profile` (requiere `--save`) envía un resumen con los anuncios nuevos o con precio nuevo que superan el umbral. Variables: `RESEND_API_KEY`, `DEPAZO_ALERT_EMAIL` y, opcional, `DEPAZO_ALERT_FROM` |
 | Importar captura | `uv run depazo import <archivo.json> [--save]` |
 | Ranking | `uv run depazo match --profile <perfil.json> [--limit 20] [--output json]` (ejemplo en `docs/examples/search_profile.json`) |
 

@@ -86,6 +86,7 @@ Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el c
 5. **Dedupe:** agrupa en una `Property` canónica los anuncios del mismo inmueble publicados en distintos portales (distancia < 50 m + m² ±5 % + habitaciones iguales + precio ±10 %).
 6. **Match:** para cada `SearchProfile` activo, aplica un pre-filtro SQL (precio, habitaciones, `ST_Within` de la zona) y luego calcula el puntaje en Python.
 7. **Notify:** si el puntaje supera el umbral del usuario y no se le avisó antes, envía push inmediato y lo encola para el resumen por email.
+   - **v1 (implementado):** `--alert-profile` puntúa solo los anuncios nuevos o con precio nuevo de la ejecución y manda **un email de resumen en texto plano** por Resend. No repite avisos porque un anuncio solo es nuevo una vez, y un `Idempotency-Key` evita duplicados si se reintenta. Limitación: si el email falla, los anuncios ya quedaron guardados y ese aviso se pierde; la tabla `matches` con `notified_at` lo resolverá cuando haya multiusuario.
 8. **Health check:** si un portal devuelve 0 resultados o falla la validación por encima de un umbral, se marca el run como fallido y se abre un issue en GitHub.
 
 ## 6. Modelo de datos (inicial)
