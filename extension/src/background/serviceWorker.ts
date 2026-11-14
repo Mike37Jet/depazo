@@ -81,11 +81,11 @@ async function handleMessage(message: ClassifiedMessage): Promise<boolean> {
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  prepare().catch(reportFailure);
+  prepare().then(runCycleThenDeliver).catch(reportFailure);
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  prepare().catch(reportFailure);
+  prepare().then(runCycleThenDeliver).catch(reportFailure);
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
