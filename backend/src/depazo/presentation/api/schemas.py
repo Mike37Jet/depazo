@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 
 from depazo.application.use_cases.rank_listings import RankedListing, RankingReport
 from depazo.domain.listing import Listing
+from depazo.domain.neighborhoods import NeighborhoodSummary
 from depazo.domain.scoring import CriterionScore
 from depazo.domain.search_profile import ScoreWeights, SearchProfile
 
@@ -144,6 +145,7 @@ class MatchBody(StrictModel):
 
 class MatchesBody(StrictModel):
     matches: list[MatchBody]
+    match_count: int
     evaluated_count: int
     rejected_count: int
 
@@ -151,8 +153,27 @@ class MatchesBody(StrictModel):
     def from_report(cls, report: RankingReport, limit: int) -> "MatchesBody":
         return cls(
             matches=[MatchBody.from_domain(match) for match in report.matches[:limit]],
+            match_count=len(report.matches),
             evaluated_count=report.evaluated_count,
             rejected_count=report.rejected_count,
+        )
+
+
+class NeighborhoodBody(StrictModel):
+    name: str
+    listing_count: int
+
+
+class NeighborhoodsBody(StrictModel):
+    neighborhoods: list[NeighborhoodBody]
+
+    @classmethod
+    def from_domain(cls, summaries: list[NeighborhoodSummary]) -> "NeighborhoodsBody":
+        return cls(
+            neighborhoods=[
+                NeighborhoodBody(name=summary.name, listing_count=summary.listing_count)
+                for summary in summaries
+            ]
         )
 
 

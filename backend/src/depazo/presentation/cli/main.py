@@ -34,6 +34,7 @@ from depazo.domain.listing import Listing
 from depazo.domain.scoring import monthly_cost_usd
 from depazo.domain.search_profile import SearchProfile
 from depazo.infrastructure.persistence.database import DatabaseNotConfiguredError
+from depazo.presentation.api.app import describe_api
 
 MAX_PAGES_PER_RUN = 20
 MAX_MATCHES_SHOWN = 200
@@ -122,6 +123,11 @@ def match(
 async def _rank(profile: SearchProfile) -> RankingReport:
     async with open_unit_of_work_factory() as open_unit_of_work:
         return await RankListings(open_unit_of_work).execute(profile)
+
+
+@app.command(help="Print the API description (OpenAPI) as JSON.")
+def openapi() -> None:
+    typer.echo(json.dumps(describe_api(), indent=2, sort_keys=True))
 
 
 def _match_as_dict(match: RankedListing) -> dict[str, object]:

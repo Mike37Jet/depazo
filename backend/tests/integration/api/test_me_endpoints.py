@@ -1,70 +1,19 @@
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import httpx
 import pytest
-import respx
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from depazo.infrastructure.auth.supabase_jwt_verifier import SupabaseJwtVerifier
-from depazo.infrastructure.persistence.unit_of_work import SqlAlchemyUnitOfWork
-from depazo.presentation.api.app import create_app
-from depazo.presentation.api.dependencies import ApiDependencies
-from depazo.presentation.api.rate_limit import InMemoryRateLimiter
-from tests.builders import a_listing
-from tests.integration.auth_tokens import AUDIENCE, ISSUER, JWKS_URL, issue_token, public_jwks
+from tests.integration.api.api_helpers import REQUESTS_PER_WINDOW, authorized, save_listings
 
-NOW = datetime(2026, 11, 14, 12, tzinfo=UTC)
-REQUESTS_PER_WINDOW = 10
 PROFILE = {
     "max_monthly_cost_usd": 900,
     "min_bedrooms": 2,
     "preferred_neighborhoods": ["La Carolina"],
     "min_score": 0,
 }
-
-
-def authorized(user_id: UUID) -> dict[str, str]:
-    return {"Authorization": f"Bearer {issue_token(user_id)}"}
-
-
-@pytest.fixture
-async def client(
-    session_factory: async_sessionmaker[AsyncSession],
-) -> AsyncIterator[httpx.AsyncClient]:
-    @asynccontextmanager
-    async def open_dependencies() -> AsyncIterator[ApiDependencies]:
-        async with httpx.AsyncClient() as keys_client:
-            yield ApiDependencies(
-                open_unit_of_work=lambda: SqlAlchemyUnitOfWork(session_factory),
-                token_verifier=SupabaseJwtVerifier(keys_client, JWKS_URL, ISSUER, AUDIENCE),
-                rate_limiter=InMemoryRateLimiter(
-                    max_requests=REQUESTS_PER_WINDOW, window_seconds=60
-                ),
-                clock=lambda: NOW,
-            )
-
-    app = create_app(open_dependencies)
-    with respx.mock(assert_all_called=False) as router:
-        router.get(JWKS_URL).mock(return_value=httpx.Response(200, json=public_jwks()))
-        router.route(host="test").pass_through()
-        async with app.router.lifespan_context(app):
-            transport = httpx.ASGITransport(app=app)
-            async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-                yield client
-
-
-async def save_listings(
-    session_factory: async_sessionmaker[AsyncSession], *overrides: dict[str, Any]
-) -> None:
-    async with SqlAlchemyUnitOfWork(session_factory) as unit_of_work:
-        for override in overrides:
-            await unit_of_work.listings.save(a_listing(**override), NOW)
-        await unit_of_work.commit()
 
 
 async def test_health_needs_no_token(client: httpx.AsyncClient) -> None:
@@ -143,6 +92,7 @@ async def test_ranks_saved_listings_against_the_users_profile(
     body = response.json()
     assert response.status_code == 200
     assert [match["listing"]["external_id"] for match in body["matches"]] == ["cheap", "pricey"]
+    assert body["match_count"] == 2
     assert body["evaluated_count"] == 3
     assert body["rejected_count"] == 1
     assert {item["criterion"] for item in body["matches"][0]["breakdown"]} >= {"price"}
@@ -158,6 +108,7 @@ async def test_limits_the_number_of_matches_returned(
     response = await client.get("/me/matches", params={"limit": 2}, headers=headers)
 
     assert len(response.json()["matches"]) == 2
+    assert response.json()["match_count"] == 3
 
 
 @pytest.mark.parametrize(
