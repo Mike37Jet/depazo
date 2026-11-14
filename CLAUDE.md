@@ -72,6 +72,7 @@ Backend (desde `backend/`):
 | Ingesta | `uv run depazo ingest --source icasas --pages 1 [--output json] [--save] [--alert-profile <perfil.json>]` |
 | Alertas por email | `--alert-profile` (requiere `--save`) envía un resumen con los anuncios nuevos o con precio nuevo que superan el umbral. Variables: `RESEND_API_KEY`, `DEPAZO_ALERT_EMAIL` y, opcional, `DEPAZO_ALERT_FROM` |
 | Importar captura | `uv run depazo import <archivo.json> [--save]` |
+| Ingesta programada | LaunchAgent `com.depazo.ingest` cada 3 h → `scripts/scheduled_ingest.sh` desde el clon `~/.local/share/depazo/app` (ADR 0018). Config en `~/.config/depazo/{env,profile.json}`, log en `~/Library/Logs/depazo/ingest.log`. Ejecutar ya: `launchctl kickstart gui/$(id -u)/com.depazo.ingest` |
 | Ranking | `uv run depazo match --profile <perfil.json> [--limit 20] [--output json]` (ejemplo en `docs/examples/search_profile.json`) |
 
 Extensión (desde `extension/`): `pnpm install`, `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` (genera `dist/`, que se carga en `chrome://extensions` → "Cargar descomprimida").
