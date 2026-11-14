@@ -11,5 +11,5 @@ def icasas_page_html() -> str:
 
 
 @pytest.fixture
-def plusvalia_capture_path() -> Path:
-    return FIXTURES_DIRECTORY / "capture" / "plusvalia_capture.json"
+def browser_capture_path() -> Path:
+    return FIXTURES_DIRECTORY / "capture" / "browser_capture.json"

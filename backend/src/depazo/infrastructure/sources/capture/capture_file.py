@@ -15,8 +15,8 @@ CAPTURE_FORMAT_VERSION = 1
 MAX_CAPTURE_FILE_BYTES = 10 * 1024 * 1024
 MAX_CAPTURED_LISTINGS = 5000
 SOURCE_NAME = "capture"
-LISTING_HOSTS = {"plusvalia": "www.plusvalia.com"}
-IMAGE_HOST_SUFFIXES = {"plusvalia": ".naventcdn.com"}
+LISTING_HOSTS = {"plusvalia": "www.plusvalia.com", "marketplace": "www.facebook.com"}
+IMAGE_HOST_SUFFIXES = {"plusvalia": ".naventcdn.com", "marketplace": ".fbcdn.net"}
 
 Amount = Annotated[Decimal, Field(ge=0, le=1_000_000)]
 RoomCount = Annotated[int, Field(ge=0, le=50)]
@@ -31,7 +31,7 @@ class InvalidCaptureFileError(SourceUnavailableError):
 class CapturedListingRecord(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, alias_generator=to_camel)
 
-    source: Literal["plusvalia"]
+    source: Literal["plusvalia", "marketplace"]
     external_id: Annotated[str, Field(pattern=r"^[\w-]{1,64}$")]
     url: Url
     title: Annotated[str, Field(min_length=1, max_length=300)]

@@ -47,6 +47,21 @@
       "city": "Quito",
       "imageUrl": null,
       "capturedAt": "2026-11-13T12:00:00.000Z"
+    },
+    {
+      "source": "marketplace",
+      "externalId": "2135556347218642",
+      "url": "https://www.facebook.com/marketplace/item/2135556347218642/",
+      "title": "CUMBAYÁ RENTA DEPARTAMENTO",
+      "monthlyRentUsd": 1200,
+      "condoFeeUsd": null,
+      "areaM2": null,
+      "bedrooms": null,
+      "bathrooms": null,
+      "neighborhood": "Cumbaya",
+      "city": "Quito",
+      "imageUrl": "https://scontent.fuio5-1.fna.fbcdn.net/v/t39.30808-6/2135556347218642_fixture.jpg?stp=dst-jpg&oh=00_fixture&oe=6AFDC038",
+      "capturedAt": "2026-11-13T12:00:00.000Z"
     }
   ]
 }
