@@ -3,8 +3,15 @@
   "name": "depazo",
   "version": "0.1.0",
   "description": "Guarda los anuncios de arriendo que ves en Plusvalía y Facebook Marketplace para compararlos en depazo.",
-  "permissions": ["storage"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArJxYsS8an8BXT0qjgwEXuZWLQZ7T9UvLbykvS4Owxt2fcEIvpJv967BZdNHFLGbKQ3AAp+paQkuktkbc8cV08AZyRNDJ20ob0TLuzRY8pEgA37a6bzfZjxGkkLgpVIPnSQIhg6m6uhcS6hJlx13G3XfB7I+lsqd7xNq0raNHw5sDvapyRd1h2oDQeg0Sgk+WoKiqBWQdxahyvVdvjM6XNA52ksv34/EriXhCDkoWEhmRiLxCycIw169oaZT9k6e8NmS0fRYfjgVhu5TeYneJ0dVmsJeudri2ETWQet0byjazXbRHL16bSio2DiXmy16nKpEKly5JknJrtgbQSWJ7TQIDAQAB",
+  "permissions": ["storage", "alarms", "nativeMessaging"],
   "host_permissions": ["https://www.plusvalia.com/*", "https://www.facebook.com/*"],
+  "background": {
+    "service_worker": "background/serviceWorker.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'none'"
+  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "depazo"

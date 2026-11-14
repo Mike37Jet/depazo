@@ -25,11 +25,22 @@ const FEATURE_PATTERNS = {
 } as const;
 const USD_AMOUNT_PATTERN = /USD\s*([\d.,]+)/;
 
-export function parsePlusvaliaPage(root: ParentNode, capturedAt: Date): CapturedListing[] {
-  return [...root.querySelectorAll<HTMLElement>(SELECTORS.card)].flatMap((card) => {
+export interface PlusvaliaPageReading {
+  cardCount: number;
+  listings: CapturedListing[];
+}
+
+export function readPlusvaliaPage(root: ParentNode, capturedAt: Date): PlusvaliaPageReading {
+  const cards = [...root.querySelectorAll<HTMLElement>(SELECTORS.card)];
+  const listings = cards.flatMap((card) => {
     const listing = parseCard(card, capturedAt);
     return listing === null ? [] : [listing];
   });
+  return { cardCount: cards.length, listings };
+}
+
+export function parsePlusvaliaPage(root: ParentNode, capturedAt: Date): CapturedListing[] {
+  return readPlusvaliaPage(root, capturedAt).listings;
 }
 
 function parseCard(card: HTMLElement, capturedAt: Date): CapturedListing | null {

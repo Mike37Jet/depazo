@@ -42,6 +42,28 @@
         <button type="button" class="destructive-button" id="reset-button">Borrar capturas</button>
       </section>
 
+      <section id="watch-panel" aria-labelledby="watch-switch-label">
+        <label class="switch-row" for="watch-switch">
+          <span class="headline" id="watch-switch-label">Vigilar Plusvalía automáticamente</span>
+          <input type="checkbox" class="switch" id="watch-switch" disabled />
+        </label>
+        <p class="secondary" id="watch-status">Cargando el estado de la vigilancia…</p>
+        <p class="secondary" id="watch-last-check"></p>
+        <p class="secondary" id="watch-last-delivery"></p>
+        <p class="secondary danger" id="watch-failure" hidden>
+          No se pudo actualizar la vigilancia. Inténtalo de nuevo.
+        </p>
+        <div class="attention" id="watch-attention" hidden>
+          <p class="headline danger">La vigilancia está detenida</p>
+          <p class="secondary">
+            La pestaña vigilada no mostró anuncios después de la última recarga. Puede ser un
+            bloqueo de Plusvalía o un cambio en la página. Abre Plusvalía, comprueba que carga con
+            normalidad y pulsa Reanudar. La vigilancia nunca se reanuda sola.
+          </p>
+          <button type="button" class="secondary-button" id="watch-resume-button">Reanudar</button>
+        </div>
+      </section>
+
       <footer class="footnote">
         Solo se guardan datos del inmueble: nunca nombres ni teléfonos de anunciantes.
       </footer>

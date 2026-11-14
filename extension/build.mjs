@@ -7,6 +7,7 @@ await rm(OUTPUT_DIRECTORY, { recursive: true, force: true });
 await mkdir(OUTPUT_DIRECTORY);
 await build({
   entryPoints: {
+    "background/serviceWorker": "src/background/serviceWorker.ts",
     "content/plusvalia": "src/content/plusvalia.ts",
     "content/marketplace": "src/content/marketplace.ts",
     "popup/popup": "src/popup/popup.ts",

@@ -1,6 +1,9 @@
 import { buildCaptureExport, countBySource, exportFileName } from "../capture/captureCollection";
 import type { CapturedListing, CaptureSource } from "../capture/capturedListing";
 import { clearCaptures, loadCaptures } from "../capture/chromeCaptureStorage";
+import { buildWatchCommandMessage, watchCommandReplySchema } from "../watch/watchMessages";
+import { loadWatchState, WATCH_STATE_KEY } from "../watch/watchStore";
+import { mountWatchPanel } from "./watchPanel";
 
 type PopupState = "loading" | "empty" | "ready" | "error";
 
@@ -86,6 +89,28 @@ function runSafely(action: () => Promise<void>): () => void {
   };
 }
 
+function reportWatchFailure(error: unknown): void {
+  console.error("depazo popup could not show the watch state", error);
+  elementById("watch-failure").hidden = false;
+}
+
+const watchPanel = mountWatchPanel(document, {
+  loadState: () => loadWatchState(chrome.storage.local),
+  sendCommand: async (command) => {
+    const reply: unknown = await chrome.runtime.sendMessage(buildWatchCommandMessage(command));
+    if (!watchCommandReplySchema.safeParse(reply).success) {
+      throw new Error("the service worker did not apply the watch command");
+    }
+  },
+  formatDate: (date) => DATE_FORMAT.format(date),
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && WATCH_STATE_KEY in changes) {
+    watchPanel.refresh().catch(reportWatchFailure);
+  }
+});
+watchPanel.refresh().catch(reportWatchFailure);
 elementById("clear-button").onclick = runSafely(clearAfterConfirmation);
 elementById("reset-button").onclick = runSafely(clearAfterConfirmation);
 render().catch(reportFailure);
