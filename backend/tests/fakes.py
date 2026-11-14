@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Self
 
+from depazo.application.dto.listing_alert import ListingAlert
 from depazo.domain.listing import Listing
 
 ListingKey = tuple[str, str]
@@ -43,3 +44,11 @@ class InMemoryUnitOfWork:
 
     async def commit(self) -> None:
         self.committed = True
+
+
+class RecordingNotifier:
+    def __init__(self) -> None:
+        self.batches: list[list[ListingAlert]] = []
+
+    async def send_alerts(self, alerts: Sequence[ListingAlert]) -> None:
+        self.batches.append(list(alerts))
