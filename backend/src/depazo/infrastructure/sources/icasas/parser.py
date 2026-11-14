@@ -19,6 +19,10 @@ def parse_listing_page(html: str) -> list[Listing]:
     return [listing for listing in parsed_cards if listing is not None]
 
 
+def count_listing_cards(html: str) -> int:
+    return len(LexborHTMLParser(html).css(CARD_SELECTOR))
+
+
 def parse_total_results(html: str) -> int | None:
     heading = LexborHTMLParser(html).css_first("h1")
     if heading is None:

@@ -3,6 +3,7 @@ from decimal import Decimal
 import pytest
 
 from depazo.infrastructure.sources.icasas.parser import (
+    count_listing_cards,
     parse_listing_page,
     parse_spanish_decimal,
     parse_total_results,
@@ -78,3 +79,10 @@ def test_returns_no_listings_for_page_without_cards() -> None:
 )
 def test_parses_spanish_formatted_numbers(text: str, expected: Decimal | None) -> None:
     assert parse_spanish_decimal(text) == expected
+
+
+def test_counts_cards_even_when_they_cannot_be_parsed() -> None:
+    html = "<ul class='listAds'><li class='serp-snippet'></li><li class='serp-snippet'></li></ul>"
+
+    assert count_listing_cards(html) == 2
+    assert parse_listing_page(html) == []

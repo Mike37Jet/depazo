@@ -12,6 +12,10 @@ class SourceUnavailableError(Exception):
     pass
 
 
+class SourceLayoutChangedError(SourceUnavailableError):
+    pass
+
+
 class ListingSource(Protocol):
     @property
     def name(self) -> str: ...
