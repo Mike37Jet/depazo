@@ -1,9 +1,11 @@
 from collections.abc import Sequence
 from datetime import datetime
 from typing import Self
+from uuid import UUID
 
 from depazo.application.dto.listing_alert import ListingAlert
 from depazo.domain.listing import Listing
+from depazo.domain.search_profile import SearchProfile
 
 ListingKey = tuple[str, str]
 
@@ -27,14 +29,36 @@ class InMemoryListingRepository:
         return [listing for listing, _ in self.saved.values()]
 
 
+class InMemorySearchProfileRepository:
+    def __init__(self) -> None:
+        self.saved: dict[UUID, SearchProfile] = {}
+
+    async def find_for_user(self, user_id: UUID) -> SearchProfile | None:
+        return self.saved.get(user_id)
+
+    async def save_for_user(
+        self, user_id: UUID, profile: SearchProfile, saved_at: datetime
+    ) -> None:
+        self.saved[user_id] = profile
+
+
 class InMemoryUnitOfWork:
-    def __init__(self, repository: InMemoryListingRepository) -> None:
-        self._repository = repository
+    def __init__(
+        self,
+        repository: InMemoryListingRepository | None = None,
+        search_profiles: InMemorySearchProfileRepository | None = None,
+    ) -> None:
+        self._repository = repository or InMemoryListingRepository()
+        self._search_profiles = search_profiles or InMemorySearchProfileRepository()
         self.committed = False
 
     @property
     def listings(self) -> InMemoryListingRepository:
         return self._repository
+
+    @property
+    def search_profiles(self) -> InMemorySearchProfileRepository:
+        return self._search_profiles
 
     async def __aenter__(self) -> Self:
         return self

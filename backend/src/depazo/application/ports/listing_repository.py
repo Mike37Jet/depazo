@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Protocol, Self
+from typing import Protocol
 
 from depazo.domain.listing import Listing
 
@@ -13,14 +13,3 @@ class ListingRepository(Protocol):
     async def record_price(self, listing: Listing, observed_at: datetime) -> None: ...
 
     async def list_active(self) -> Sequence[Listing]: ...
-
-
-class UnitOfWork(Protocol):
-    @property
-    def listings(self) -> ListingRepository: ...
-
-    async def __aenter__(self) -> Self: ...
-
-    async def __aexit__(self, *exc_info: object) -> None: ...
-
-    async def commit(self) -> None: ...

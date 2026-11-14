@@ -13,7 +13,7 @@ from testcontainers.community.postgres import PostgresContainer
 from depazo.infrastructure.persistence.database import create_database_engine
 
 POSTGIS_IMAGE = os.environ.get("DEPAZO_TEST_POSTGIS_IMAGE", "postgis/postgis:17-3.5")
-ALEMBIC_CONFIG_PATH = Path(__file__).parents[3] / "alembic.ini"
+ALEMBIC_CONFIG_PATH = Path(__file__).parents[2] / "alembic.ini"
 
 
 def alembic_config_for(url: str) -> Config:
@@ -42,7 +42,9 @@ async def session_factory(database_url: str) -> AsyncIterator[async_sessionmaker
     engine = create_database_engine(database_url)
     async with engine.begin() as connection:
         await connection.execute(
-            text("TRUNCATE listings, listing_price_history RESTART IDENTITY CASCADE")
+            text(
+                "TRUNCATE listings, listing_price_history, search_profiles RESTART IDENTITY CASCADE"
+            )
         )
     yield async_sessionmaker(engine, expire_on_commit=False)
     await engine.dispose()

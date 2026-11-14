@@ -1,8 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy import (
+    ARRAY,
     BigInteger,
+    Boolean,
     DateTime,
     Double,
     ForeignKey,
@@ -12,10 +15,12 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    Uuid,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 MONEY = Numeric(12, 2)
+WEIGHT = Numeric(4, 2)
 
 
 class Base(DeclarativeBase):
@@ -57,3 +62,22 @@ class ListingPriceRecord(Base):
     monthly_rent_usd: Mapped[Decimal | None] = mapped_column(MONEY)
     condo_fee_usd: Mapped[Decimal | None] = mapped_column(MONEY)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SearchProfileRecord(Base):
+    __tablename__ = "search_profiles"
+
+    user_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    max_monthly_cost_usd: Mapped[Decimal] = mapped_column(MONEY)
+    min_monthly_cost_usd: Mapped[Decimal | None] = mapped_column(MONEY)
+    is_condo_fee_in_budget: Mapped[bool] = mapped_column(Boolean)
+    min_bedrooms: Mapped[int | None] = mapped_column(SmallInteger)
+    min_bathrooms: Mapped[int | None] = mapped_column(SmallInteger)
+    min_area_m2: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    preferred_neighborhoods: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    excluded_neighborhoods: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    price_weight: Mapped[Decimal] = mapped_column(WEIGHT)
+    area_weight: Mapped[Decimal] = mapped_column(WEIGHT)
+    neighborhood_weight: Mapped[Decimal] = mapped_column(WEIGHT)
+    min_score: Mapped[int] = mapped_column(SmallInteger)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

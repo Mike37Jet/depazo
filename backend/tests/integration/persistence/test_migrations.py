@@ -4,7 +4,7 @@ from alembic import command
 from sqlalchemy import text
 
 from depazo.infrastructure.persistence.database import create_database_engine
-from tests.integration.persistence.conftest import alembic_config_for
+from tests.integration.conftest import alembic_config_for
 
 
 async def listing_tables_in(url: str) -> set[str]:
