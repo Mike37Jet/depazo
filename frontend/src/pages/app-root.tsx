@@ -1,5 +1,5 @@
 import { Outlet } from "@tanstack/react-router";
-import { Search, Star, User } from "lucide-react";
+import { Heart, Search, Star, User } from "lucide-react";
 import { createContext, useContext } from "react";
 import type { TabItem } from "../components/organisms/tab-bar";
 import { AppShell } from "../components/templates/app-shell";
@@ -9,6 +9,7 @@ import { SignInPage } from "./sign-in-page";
 
 const TABS: TabItem[] = [
   { to: "/", label: "Para ti", icon: Star },
+  { to: "/favoritos", label: "Favoritos", icon: Heart },
   { to: "/busqueda", label: "Búsqueda", icon: Search },
   { to: "/cuenta", label: "Cuenta", icon: User },
 ];

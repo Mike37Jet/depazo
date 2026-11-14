@@ -3,24 +3,55 @@ import { SearchX, SlidersHorizontal } from "lucide-react";
 import { Button, buttonClasses } from "../components/atoms/button";
 import { Chip } from "../components/atoms/chip";
 import { GLASS_BUTTON_CLASSES, GlassSurface } from "../components/atoms/glass-surface";
-import { Skeleton } from "../components/atoms/skeleton";
 import { EmptyState } from "../components/molecules/empty-state";
 import { StatusMessage } from "../components/molecules/status-message";
-import { MatchCard } from "../components/organisms/match-card";
+import { Toast } from "../components/molecules/toast";
+import { MatchList, MatchListSkeleton } from "../components/organisms/match-list";
 import { TabPage } from "../components/templates/tab-page";
-import { explainEmptyReport } from "../format/matches-report";
+import { describeReport, explainEmptyReport } from "../format/matches-report";
 import { describeFilters } from "../format/search-profile";
+import {
+  type SavedToggle,
+  useDiscardListing,
+  useRestoreListing,
+  useToggleSaved,
+} from "../hooks/use-listing-reactions";
 import { useMatches } from "../hooks/use-matches";
 import { useSearchProfile } from "../hooks/use-search-profile";
-import type { Matches } from "../services/api-client";
+import { useUndoWindow } from "../hooks/use-undo-window";
+import type { Match, Matches } from "../services/api-client";
 
 const MATCHES_PER_PAGE = 50;
+
+interface DiscardedListing extends SavedToggle {
+  place: string;
+}
 
 export function MatchesPage() {
   const matches = useMatches(MATCHES_PER_PAGE);
   const profile = useSearchProfile();
+  const toggleSaved = useToggleSaved();
+  const discard = useDiscardListing();
+  const restore = useRestoreListing();
+  const undo = useUndoWindow<DiscardedListing>();
   const report = matches.data;
   const filters = profile.data ? describeFilters(profile.data) : [];
+
+  const discardMatch = (match: Match) => {
+    discard.mutate(match.listing);
+    undo.open({
+      listing: match.listing,
+      isSaved: match.is_saved,
+      place: match.listing.neighborhood ?? match.listing.title,
+    });
+  };
+
+  const undoDiscard = () => {
+    if (undo.item) {
+      restore.mutate({ listing: undo.item.listing, isSaved: undo.item.isSaved });
+    }
+    undo.close();
+  };
 
   return (
     <TabPage
@@ -43,7 +74,7 @@ export function MatchesPage() {
           ))}
         </ul>
       )}
-      {matches.isPending && <MatchesSkeleton />}
+      {matches.isPending && <MatchListSkeleton label="Cargando coincidencias" />}
       {matches.isError && (
         <div className="grid gap-3">
           <StatusMessage
@@ -71,39 +102,25 @@ export function MatchesPage() {
         <EmptyReport report={report} minScore={profile.data?.min_score} />
       )}
       {report && report.matches.length > 0 && (
-        <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {report.matches.map((match) => (
-            <li key={`${match.listing.source}-${match.listing.external_id}`}>
-              <MatchCard match={match} />
-            </li>
-          ))}
-        </ul>
+        <MatchList
+          matches={report.matches}
+          onToggleSaved={(match, isSaved) =>
+            toggleSaved.mutate({ listing: match.listing, isSaved })
+          }
+          onDiscard={discardMatch}
+        />
+      )}
+      {(toggleSaved.isError || discard.isError || restore.isError) && (
+        <StatusMessage tone="error" message="No pudimos guardar el cambio. Inténtalo de nuevo." />
+      )}
+      {undo.item && (
+        <Toast
+          message={`Descartado: ${undo.item.place}`}
+          actionLabel="Deshacer"
+          onAction={undoDiscard}
+        />
       )}
     </TabPage>
-  );
-}
-
-function describeReport(report: Matches): string {
-  const summary = `${report.match_count} de ${report.evaluated_count} anuncios encajan con tu búsqueda`;
-  return report.match_count > report.matches.length
-    ? `${summary} · ves los ${report.matches.length} mejores`
-    : summary;
-}
-
-function MatchesSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando coincidencias" className="grid gap-4 md:grid-cols-2">
-      {["first", "second", "third"].map((key) => (
-        <div key={key} className="grid overflow-hidden rounded-lg bg-surface">
-          <Skeleton className="aspect-[16/10] w-full rounded-none" />
-          <div className="grid gap-2 p-4">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 

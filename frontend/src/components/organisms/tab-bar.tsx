@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 
 export interface TabItem {
-  to: "/" | "/busqueda" | "/cuenta";
+  to: "/" | "/favoritos" | "/busqueda" | "/cuenta";
   label: string;
   icon: LucideIcon;
 }

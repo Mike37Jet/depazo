@@ -6,12 +6,19 @@ export interface EmptyReportExplanation {
   actionLabel: string;
 }
 
-type ReportCounts = Pick<Matches, "evaluated_count" | "rejected_count">;
+type ReportCounts = Pick<Matches, "evaluated_count" | "rejected_count" | "discarded_count">;
 
 export function explainEmptyReport(
   report: ReportCounts,
   minScore: number | undefined,
 ): EmptyReportExplanation {
+  if (report.evaluated_count === 0 && report.discarded_count > 0) {
+    return {
+      title: "Descartaste todos los anuncios",
+      message: "Cuando lleguen anuncios nuevos de los portales, aparecerán aquí.",
+      actionLabel: "Revisar búsqueda",
+    };
+  }
   if (report.evaluated_count === 0) {
     return {
       title: "Todavía no hay anuncios",
@@ -37,4 +44,23 @@ export function explainEmptyReport(
     message: `${passing}, pero ninguno llega a ${threshold}. Prueba bajar el puntaje mínimo o agregar más sectores preferidos.`,
     actionLabel: "Bajar el puntaje mínimo",
   };
+}
+
+export function describeReport(report: Matches): string {
+  const parts = [
+    `${report.match_count} de ${report.evaluated_count} anuncios encajan con tu búsqueda`,
+  ];
+  if (report.match_count > report.matches.length) {
+    parts.push(`ves los ${report.matches.length} mejores`);
+  }
+  if (report.discarded_count > 0) {
+    parts.push(
+      report.discarded_count === 1 ? "1 descartado" : `${report.discarded_count} descartados`,
+    );
+  }
+  return parts.join(" · ");
+}
+
+export function describeSavedCount(count: number): string {
+  return count === 1 ? "1 anuncio guardado" : `${count} anuncios guardados`;
 }

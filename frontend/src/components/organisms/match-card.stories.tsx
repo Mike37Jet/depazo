@@ -4,14 +4,14 @@ import { MatchCard } from "./match-card";
 
 const meta = {
   component: MatchCard,
-  args: { match: aMatch() },
+  args: { match: aMatch(), onToggleSaved: () => undefined },
   decorators: [(Story) => <div className="max-w-sm">{Story()}</div>],
 } satisfies Meta<typeof MatchCard>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Complete: Story = {};
+export const Complete: Story = { args: { onDiscard: () => undefined } };
 export const MissingFacts: Story = {
   args: {
     match: aMatch(
@@ -19,4 +19,8 @@ export const MissingFacts: Story = {
       64,
     ),
   },
+};
+export const Saved: Story = { args: { match: { ...aMatch(), is_saved: true } } };
+export const NoLongerFits: Story = {
+  args: { match: { ...aMatch(), is_saved: true, passed_hard_filters: false } },
 };

@@ -18,6 +18,7 @@
   --color-score-mid-tint: var(--score-mid-tint);
   --color-glass-select: var(--glass-select);
   --color-on-media: var(--on-media);
+  --color-dim-media: var(--dim-media);
   --color-placeholder-ink: var(--placeholder-ink);
   --color-danger: var(--danger);
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;

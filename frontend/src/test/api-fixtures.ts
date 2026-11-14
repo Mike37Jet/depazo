@@ -16,6 +16,8 @@ export const SAVED_PROFILE: SearchProfile = {
 export function aMatch(overrides: Partial<Match["listing"]> = {}, score = 87): Match {
   return {
     score,
+    is_saved: false,
+    passed_hard_filters: true,
     breakdown: [
       { criterion: "price", value: 0.9, weight: 0.5 },
       { criterion: "area", value: 0.8, weight: 0.25 },
@@ -48,5 +50,6 @@ export function aReport(matches: Match[], evaluatedCount = 10): Matches {
     match_count: matches.length,
     evaluated_count: evaluatedCount,
     rejected_count: evaluatedCount - matches.length,
+    discarded_count: 0,
   };
 }

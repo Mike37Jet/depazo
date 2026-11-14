@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { AccountPage } from "../pages/account-page";
 import { AppRoot, useSignedInSession } from "../pages/app-root";
+import { FavoritesPage } from "../pages/favorites-page";
 import { MatchesPage } from "../pages/matches-page";
 import { SearchProfilePage } from "../pages/search-profile-page";
 
@@ -15,6 +16,12 @@ const matchesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: MatchesPage,
+});
+
+const favoritesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/favoritos",
+  component: FavoritesPage,
 });
 
 const searchProfileRoute = createRoute({
@@ -33,7 +40,12 @@ function SignedInAccountPage() {
   return <AccountPage email={useSignedInSession().email} />;
 }
 
-const routeTree = rootRoute.addChildren([matchesRoute, searchProfileRoute, accountRoute]);
+const routeTree = rootRoute.addChildren([
+  matchesRoute,
+  favoritesRoute,
+  searchProfileRoute,
+  accountRoute,
+]);
 
 export function createAppRouter(history?: RouterHistory) {
   return createRouter({ routeTree, ...(history ? { history } : {}) });

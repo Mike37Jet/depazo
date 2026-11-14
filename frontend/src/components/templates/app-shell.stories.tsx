@@ -5,19 +5,20 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Star, User } from "lucide-react";
+import { Heart, Search, SlidersHorizontal, Star, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { describeFilters } from "../../format/search-profile";
 import { aMatch, SAVED_PROFILE } from "../../test/api-fixtures";
 import { Chip } from "../atoms/chip";
 import { GLASS_BUTTON_CLASSES, GlassSurface } from "../atoms/glass-surface";
-import { MatchCard } from "../organisms/match-card";
+import { MatchList } from "../organisms/match-list";
 import type { TabItem } from "../organisms/tab-bar";
 import { AppShell } from "./app-shell";
 import { TabPage } from "./tab-page";
 
 const TABS: TabItem[] = [
   { to: "/", label: "Para ti", icon: Star },
+  { to: "/favoritos", label: "Favoritos", icon: Heart },
   { to: "/busqueda", label: "Búsqueda", icon: Search },
   { to: "/cuenta", label: "Cuenta", icon: User },
 ];
@@ -52,14 +53,14 @@ function MatchesScreen() {
               </li>
             ))}
           </ul>
-          <ul className="grid gap-4">
-            <li>
-              <MatchCard match={aMatch()} />
-            </li>
-            <li>
-              <MatchCard match={aMatch({ external_id: "second", neighborhood: "Cumbayá" }, 72)} />
-            </li>
-          </ul>
+          <MatchList
+            matches={[
+              { ...aMatch(), is_saved: true },
+              aMatch({ external_id: "second", neighborhood: "Cumbayá" }, 72),
+            ]}
+            onToggleSaved={() => undefined}
+            onDiscard={() => undefined}
+          />
         </TabPage>
       </AppShell>
     </WithRouter>
