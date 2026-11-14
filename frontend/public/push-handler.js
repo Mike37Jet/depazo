@@ -5,7 +5,10 @@ const FALLBACK_MESSAGE = {
 };
 
 function isSameOriginPath(value) {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//");
+  if (typeof value !== "string" || !value.startsWith("/")) {
+    return false;
+  }
+  return new URL(value, self.location.origin).origin === self.location.origin;
 }
 
 function readMessage(event) {

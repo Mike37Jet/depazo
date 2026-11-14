@@ -32,8 +32,24 @@ def test_accepts_endpoints_of_known_push_services(endpoint: str) -> None:
         "https://user:pass@fcm.googleapis.com/x",
         "https://169.254.169.254/latest",
         "https://fcm.googleapis.com/" + "x" * 1000,
+        "https://evil.com\\.fcm.googleapis.com/x",
+        "https://evil.com%2f.fcm.googleapis.com/x",
+        "https://[::1].fcm.googleapis.com/x",
+        "https://fcm.googleapis.com:notaport/x",
     ],
-    ids=["http", "path-trick", "suffix-trick", "port", "credentials", "metadata-ip", "too-long"],
+    ids=[
+        "http",
+        "path-trick",
+        "suffix-trick",
+        "port",
+        "credentials",
+        "metadata-ip",
+        "too-long",
+        "backslash",
+        "encoded-slash",
+        "malformed-ipv6",
+        "malformed-port",
+    ],
 )
 def test_refuses_endpoints_outside_the_push_services(endpoint: str) -> None:
     with pytest.raises(InvalidPushSubscriptionError):
