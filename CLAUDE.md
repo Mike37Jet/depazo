@@ -36,7 +36,7 @@ PWA multiusuario que automatiza la búsqueda de departamentos en arriendo en **Q
 | Extensión (captura asistida) | Chrome MV3, TypeScript strict, esbuild, Zod (`zod/mini`), Biome, Vitest + happy-dom |
 | Datos / Auth | Supabase: Postgres + PostGIS, Supabase Auth (la API valida el JWT) |
 | Notificaciones | Web Push (VAPID, pywebpush), email con Resend |
-| Infra (free tiers) | Cloudflare Pages (web), Cloud Run (API), GitHub Actions (CI + cron de ingesta), Sentry |
+| Infra (free tiers) | Cloudflare Pages (web), Cloud Run (API), Sentry · sin CI ni cron en GitHub Actions (ADR 0017) |
 
 ## Estructura (prevista)
 
@@ -159,6 +159,6 @@ Proyecto personal y experimental, sin fines comerciales.
   - Scopes: `domain`, `application`, `infra`, `sources`, `db`, `api`, `cli`, `notifications`, `web`, `ui`, `pwa`, `ci`, `deps`, `docs`, `adr`.
   - Un commit = un cambio lógico.
   - **Sin coautoría de Claude:** los commits y PRs no llevan `Co-Authored-By: Claude…`, ni "Generated with Claude Code", ni ninguna otra atribución a la IA. El único autor es el usuario.
-- La calidad la garantizan las herramientas: pre-commit (formato y lint con autocorrección) y CI en cada push. Nada de ceremonia manual.
+- Sin CI (ADR 0017): antes de cada push a `main` se corren en local lint, formato, tipos, tests y build de `backend/` y `extension/` (comandos en el ADR). Los tests de persistencia necesitan Docker.
 - ADRs solo para decisiones que cambian la arquitectura o el stack.
 - Código, nombres y commits en inglés; documentación en español.

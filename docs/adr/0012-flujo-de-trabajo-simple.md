@@ -3,6 +3,7 @@
 - **Estado:** Aceptada
 - **Fecha:** 2026-11-13
 - **Reemplaza a:** 0007
+- **Modificada por:** 0017 (sin CI en GitHub Actions)
 
 ## Contexto
 Un solo desarrollador con Claude. El proceso de 0007 (PR obligatorio, Kanban con límite de WIP, release-please) agrega fricción sin beneficio a esta escala.

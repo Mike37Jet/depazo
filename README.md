@@ -15,7 +15,7 @@ PWA que automatiza la búsqueda de departamentos en arriendo en Quito, Ecuador. 
 
 ## Stack
 
-PWA con React + TypeScript · API con FastAPI (Python) · Supabase (Postgres + PostGIS + Auth) · GitHub Actions · Cloudflare Pages · Cloud Run.
+PWA con React + TypeScript · API con FastAPI (Python) · Supabase (Postgres + PostGIS + Auth) · Cloudflare Pages · Cloud Run.
 
 ## Fuentes de datos
 

@@ -1,6 +1,7 @@
 # 0005. Ingesta programada con GitHub Actions y scraping responsable
 
 - **Estado:** Aceptada
+- **Modificada por:** 0017 (el cron en GitHub Actions queda en pausa; falta definir dónde corre)
 - **Fecha:** 2026-11-13
 
 ## Contexto

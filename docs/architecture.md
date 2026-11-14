@@ -12,7 +12,7 @@
 
 ```mermaid
 flowchart LR
-    subgraph GH[GitHub Actions - cron]
+    subgraph GH[Cron de ingesta - por definir]
         ING[depazo ingest]
     end
     subgraph Portales
@@ -77,7 +77,7 @@ Las reglas de UX/UI (WCAG, Nielsen, Apple Design y UI UX Pro Max) están en [ux-
 
 ## 5. Pipeline de ingesta
 
-Se ejecuta cada hora con un cron de GitHub Actions; cada portal corre como un job aislado.
+Se ejecuta cada hora; cada portal corre como un job aislado. **Dónde corre el cron está pendiente** (ADR 0017): GitHub Actions se descartó y, mientras tanto, se ejecuta a mano con `depazo ingest --save`.
 
 1. **Fetch:** el adaptador del portal pide los listados de Quito (API oficial si existe; si no, HTML con `httpx`; Playwright solo si es imprescindible).
 2. **Parse + normalize:** convierte cada anuncio a `RawListing`, validado con Pydantic.
@@ -118,7 +118,7 @@ Se ejecuta cada hora con un cron de GitHub Actions; cada portal corre como un jo
 
 | Servicio | Uso | Riesgo / mitigación |
 |---|---|---|
-| GitHub Actions | CI + cron de ingesta (gratis en repos públicos) | El cron puede retrasarse; las IPs de datacenter pueden ser bloqueadas. Alternativa: Cloud Run Jobs + Cloud Scheduler |
+| ~~GitHub Actions~~ | Descartado (ADR 0017) por problemas de facturación de la cuenta | Verificación local; para el cron, Cloud Run Jobs + Cloud Scheduler o una máquina propia |
 | Supabase Free | DB 500 MB + Auth | El proyecto se pausa tras 7 días sin actividad (la ingesta horaria lo mantiene activo). Purgar anuncios dados de baja hace más de 90 días |
 | Cloud Run | API (escala a 0) | Requiere tarjeta en GCP aunque no se cobre. Alternativa sin tarjeta: Render (arranque en frío de unos 50 s) |
 | Cloudflare Pages | PWA estática | Uso comercial permitido |
