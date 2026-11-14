@@ -1,0 +1,11 @@
+{
+  "max_monthly_cost_usd": 900,
+  "is_condo_fee_in_budget": true,
+  "min_bedrooms": 2,
+  "min_bathrooms": 1,
+  "min_area_m2": 70,
+  "preferred_neighborhoods": ["La Carolina", "González Suárez", "Quito Tenis", "El Batán", "Iñaquito"],
+  "excluded_neighborhoods": [],
+  "weights": { "price": 0.5, "area": 0.25, "neighborhood": 0.25 },
+  "min_score": 50
+}
