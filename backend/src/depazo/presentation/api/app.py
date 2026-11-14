@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
@@ -8,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from depazo.presentation.api.dependencies import ApiDependencies
-from depazo.presentation.api.routers import health, me
+from depazo.presentation.api.routers import health, me, neighborhoods
 
 SECURITY_HEADERS = {
     "Cache-Control": "no-store",
@@ -52,7 +53,16 @@ def create_app(
     app.add_exception_handler(Exception, _unexpected_error)
     app.include_router(health.router)
     app.include_router(me.router)
+    app.include_router(neighborhoods.router)
     return app
+
+
+def describe_api() -> dict[str, Any]:
+    return create_app(_never_opened, is_openapi_published=True).openapi()
+
+
+def _never_opened() -> AbstractAsyncContextManager[ApiDependencies]:
+    raise RuntimeError("describing the api never opens its dependencies")
 
 
 async def _add_security_headers(

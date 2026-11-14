@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 
+from depazo.application.use_cases.list_neighborhoods import ListNeighborhoods
 from depazo.application.use_cases.manage_search_profile import GetSearchProfile, SaveSearchProfile
 from depazo.application.use_cases.rank_user_matches import (
     RankUserMatches,
@@ -55,3 +56,12 @@ async def test_ranks_listings_with_the_users_own_profile() -> None:
 async def test_asks_for_a_profile_before_ranking() -> None:
     with pytest.raises(SearchProfileNotFoundError):
         await RankUserMatches(a_unit_of_work).execute(uuid4())
+
+
+async def test_lists_neighborhoods_of_active_listings() -> None:
+    unit_of_work = a_unit_of_work()
+    await unit_of_work.listings.save(a_listing(neighborhood="Cumbayá"), NOW)
+
+    summaries = await ListNeighborhoods(lambda: unit_of_work).execute()
+
+    assert [summary.name for summary in summaries] == ["Cumbayá"]

@@ -1,3 +1,4 @@
+import asyncio
 import time
 from uuid import uuid4
 
@@ -133,3 +134,23 @@ async def test_reports_unusable_signing_keys_as_unavailable(response: httpx.Resp
 
     with pytest.raises(TokenVerificationUnavailableError):
         await verify(issue_token(uuid4()))
+
+
+@respx.mock
+async def test_concurrent_requests_wait_for_the_first_key_download() -> None:
+    async def slow_jwks(request: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(0.01)
+        return httpx.Response(200, json=public_jwks())
+
+    route = respx.get(JWKS_URL).mock(side_effect=slow_jwks)
+    first_user, second_user = uuid4(), uuid4()
+
+    async with httpx.AsyncClient() as client:
+        verifier = SupabaseJwtVerifier(client, JWKS_URL, ISSUER, AUDIENCE, FakeClock())
+        users = await asyncio.gather(
+            verifier.verify(issue_token(first_user)),
+            verifier.verify(issue_token(second_user)),
+        )
+
+    assert [user.user_id for user in users] == [first_user, second_user]
+    assert route.call_count == 1

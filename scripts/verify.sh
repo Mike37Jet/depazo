@@ -35,7 +35,18 @@ verify_extension() {
   pnpm build
 }
 
+verify_frontend() {
+  cd "$repository_root/frontend"
+  pnpm install --frozen-lockfile --silent
+  pnpm exec biome ci .
+  pnpm typecheck
+  pnpm test
+  pnpm build
+  pnpm build-storybook --quiet
+}
+
 configure_docker_for_testcontainers
 verify_backend
 verify_extension
+verify_frontend
 echo "depazo: all checks passed"

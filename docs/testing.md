@@ -37,7 +37,7 @@ Reglas que seguimos (Fowler):
 |---|---|---|---|
 | **Unitario** | Utilidades y hooks (formato de precios, cálculo de la alícuota) | Vitest | junto al archivo: `*.test.ts` |
 | **Unitario (sociable)** | Átomos → organismos | Testing Library, buscando elementos por rol accesible (`getByRole`), lo que a la vez valida la accesibilidad | `*.test.tsx` junto al componente |
-| **Integración** | Páginas completas | **MSW** simula la API; se prueba el flujo de la página con el router y TanStack Query | `src/pages/**/*.test.tsx` |
+| **Integración** | Páginas completas | **MSW** simula la API y un `FakeAuthGateway` el login; se prueba el flujo con el router y TanStack Query. Entorno **jsdom**: con happy-dom, MSW no intercepta `fetch` | `src/pages/**/*.test.tsx` |
 
 ## 4. End-to-end (Playwright)
 

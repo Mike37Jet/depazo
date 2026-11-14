@@ -70,7 +70,7 @@ class SupabaseJwtVerifier:
             raise InvalidAccessTokenError("token rejected") from error
 
     async def _key_for(self, key_id: str) -> jwt.PyJWK:
-        if key_id not in self._keys and self._can_refresh():
+        if key_id not in self._keys:
             await self._refresh_keys()
         key = self._keys.get(key_id)
         if key is None:
